@@ -19,6 +19,7 @@ objects:
     - "servicecatalog.k8s.io"
     resources:
     - clusterservicebrokers
+    - pods/binding
     verbs:
     - get
     - list

@@ -1,5 +1,11 @@
 ---
 openshift_master_admission_plugin_config:
+  PodNodeConstraints:
+    configuration:
+      apiversion: v1
+      kind: PodNodeConstraintsConfig
+      nodeSelectorLabelBlacklist:
+        - node-role.kubernetes.io/master
   openshift.io/ImagePolicy:
     configuration:
       kind: ImagePolicyConfig
