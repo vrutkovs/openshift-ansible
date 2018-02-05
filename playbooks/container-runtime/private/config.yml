@@ -9,6 +9,8 @@
   vars:
     l_default_container_runtime_hosts: "oo_nodes_to_config:oo_hosts_containerized_managed_true"
   roles:
+    - role: openshift_excluder
+      r_openshift_excluder_action: enable
     - role: container_runtime
   tasks:
     - import_role:
