@@ -660,6 +660,39 @@ def map_from_pairs(source, delim="="):
     return dict(item.split(delim) for item in source.split(","))
 
 
+def lib_utils_oo_remove_undefined(source):
+    ''' Replace ansible Undefined value with empty dict '''
+    result = list()
+    for item in source:
+        if item:
+            result.append(item)
+    return result
+
+
+def lib_utils_oo_has_no_matching_selector(source, selector=None):
+    ''' Return True when selector cannot be placed
+        on nodes with labels from source '''
+    if not isinstance(selector, dict):
+        return True
+    for item in source:
+        if selector.items() <= item.items():
+            # Matching selector found
+            return False
+    return True
+
+
+def lib_utils_oo_get_schedulable_nodes(source, hostvars=""):
+    ''' Filter out nodes which are not schedulable '''
+    result = list()
+    for item in source:
+        if item not in hostvars:
+            return
+        item_hostvars = hostvars[item]
+        if item_hostvars.get('openshift_schedulable'):
+            result.append(item)
+    return result
+
+
 class FilterModule(object):
     """ Custom ansible filter mapping """
 
@@ -691,5 +724,8 @@ class FilterModule(object):
             "lib_utils_oo_selector_to_string_list": lib_utils_oo_selector_to_string_list,
             "lib_utils_oo_filter_sa_secrets": lib_utils_oo_filter_sa_secrets,
             "lib_utils_oo_l_of_d_to_csv": lib_utils_oo_l_of_d_to_csv,
-            "map_from_pairs": map_from_pairs
+            "lib_utils_oo_remove_undefined": lib_utils_oo_remove_undefined,
+            "lib_utils_oo_has_no_matching_selector": lib_utils_oo_has_no_matching_selector,
+            "lib_utils_oo_get_schedulable_nodes": lib_utils_oo_get_schedulable_nodes,
+            "map_from_pairs": map_from_pairs,
         }
