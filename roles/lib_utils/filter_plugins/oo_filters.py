@@ -660,13 +660,24 @@ def map_from_pairs(source, delim="="):
     return dict(item.split(delim) for item in source.split(","))
 
 
-def lib_utils_oo_remove_undefined(source):
-    ''' Replace ansible Undefined value with empty dict '''
-    result = list()
-    for item in source:
-        if item:
-            result.append(item)
-    return result
+def lib_utils_oo_get_node_labels(source, hostvars=None):
+    ''' Return a list of labels assigned to schedulable nodes '''
+    labels = list()
+
+    # Filter out the unschedulable nodes
+    for host in source:
+        if host not in hostvars:
+            return
+        node_vars = hostvars[item]
+        if not node_vars.get('openshift.node.schedulable'):
+            continue
+
+        # Get a list of labels from the node
+        node_labels = node_vars.get('openshift_node_labels')
+        if node_labels:
+            labels.append(node_labels)
+
+    return labels
 
 
 def lib_utils_oo_has_no_matching_selector(source, selector=None):
@@ -679,18 +690,6 @@ def lib_utils_oo_has_no_matching_selector(source, selector=None):
             # Matching selector found
             return False
     return True
-
-
-def lib_utils_oo_get_schedulable_nodes(source, hostvars=""):
-    ''' Filter out nodes which are not schedulable '''
-    result = list()
-    for item in source:
-        if item not in hostvars:
-            return
-        item_hostvars = hostvars[item]
-        if item_hostvars.get('openshift_schedulable'):
-            result.append(item)
-    return result
 
 
 class FilterModule(object):
@@ -724,8 +723,7 @@ class FilterModule(object):
             "lib_utils_oo_selector_to_string_list": lib_utils_oo_selector_to_string_list,
             "lib_utils_oo_filter_sa_secrets": lib_utils_oo_filter_sa_secrets,
             "lib_utils_oo_l_of_d_to_csv": lib_utils_oo_l_of_d_to_csv,
-            "lib_utils_oo_remove_undefined": lib_utils_oo_remove_undefined,
             "lib_utils_oo_has_no_matching_selector": lib_utils_oo_has_no_matching_selector,
-            "lib_utils_oo_get_schedulable_nodes": lib_utils_oo_get_schedulable_nodes,
+            "lib_utils_oo_get_node_labels": lib_utils_oo_get_node_labels,
             "map_from_pairs": map_from_pairs,
         }
