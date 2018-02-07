@@ -15,8 +15,8 @@
 - name: Set default image variables based on openshift_deployment_type
   include_vars: "{{ item }}"
   with_first_found:
-    - "{{ openshift_deployment_type }}.yml"
-    - "default_images.yml"
+  - "{{ openshift_deployment_type }}.yml"
+  - "default_images.yml"
 
 - name: Set service_catalog image facts
   set_fact:
@@ -31,20 +31,20 @@
 
 - when: os_sdn_network_plugin_name == 'redhat/openshift-ovs-multitenant'
   block:
-    - name: Waiting for netnamespace kube-service-catalog to be ready
-      oc_obj:
-        kind: netnamespace
-        name: kube-service-catalog
-        state: list
-      register: get_output
-      until: not get_output.results.stderr is defined
-      retries: 30
-      delay: 1
-      changed_when: false
+  - name: Waiting for netnamespace kube-service-catalog to be ready
+    oc_obj:
+      kind: netnamespace
+      name: kube-service-catalog
+      state: list
+    register: get_output
+    until: not get_output.results.stderr is defined
+    retries: 30
+    delay: 1
+    changed_when: false
 
-    - name: Make kube-service-catalog project network global
-      command: >
-        {{ openshift_client_binary }} --config=/etc/origin/master/admin.kubeconfig adm pod-network make-projects-global kube-service-catalog
+  - name: Make kube-service-catalog project network global
+    command: >
+      {{ openshift_client_binary }} --config=/etc/origin/master/admin.kubeconfig adm pod-network make-projects-global kube-service-catalog
 
 - include_tasks: generate_certs.yml
 
@@ -57,7 +57,7 @@
     kind: template
     namespace: "kube-service-catalog"
     files:
-      - "{{ mktemp.stdout }}/kubeservicecatalog_roles_bindings.yml"
+    - "{{ mktemp.stdout }}/kubeservicecatalog_roles_bindings.yml"
 
 - oc_process:
     create: True
@@ -73,7 +73,7 @@
     kind: template
     namespace: kube-system
     files:
-      - "{{ mktemp.stdout }}/kubesystem_roles_bindings.yml"
+    - "{{ mktemp.stdout }}/kubesystem_roles_bindings.yml"
 
 - oc_process:
     create: True
@@ -138,7 +138,7 @@
     kind: daemonset
     name: apiserver
     files:
-      - "{{ mktemp.stdout }}/service_catalog_api_server.yml"
+    - "{{ mktemp.stdout }}/service_catalog_api_server.yml"
     delete_after: yes
 
 - name: Set Service Catalog API Server service
@@ -147,10 +147,10 @@
     namespace: kube-service-catalog
     state: present
     ports:
-      - name: secure
-        port: 443
-        protocol: TCP
-        targetPort: 6443
+    - name: secure
+      port: 443
+      protocol: TCP
+      targetPort: 6443
     selector:
       app: apiserver
     session_affinity: None
@@ -166,7 +166,7 @@
     kind: route
     name: apiserver
     files:
-      - "{{ mktemp.stdout }}/service_catalog_api_route.yml"
+    - "{{ mktemp.stdout }}/service_catalog_api_route.yml"
     delete_after: yes
 
 ## controller manager
@@ -186,7 +186,7 @@
     kind: daemonset
     name: controller-manager
     files:
-      - "{{ mktemp.stdout }}/controller_manager.yml"
+    - "{{ mktemp.stdout }}/controller_manager.yml"
     delete_after: yes
 
 - name: Set Controller Manager service
@@ -195,9 +195,9 @@
     namespace: kube-service-catalog
     state: present
     ports:
-      - port: 6443
-        protocol: TCP
-        targetPort: 6443
+    - port: 6443
+      protocol: TCP
+      targetPort: 6443
     selector:
       app: controller-manager
     session_affinity: None
