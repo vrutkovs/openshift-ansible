@@ -669,7 +669,8 @@ def lib_utils_oo_get_node_labels(source, hostvars=None):
         if host not in hostvars:
             return
         node_vars = hostvars[host]
-        if not node_vars.get('openshift.node.schedulable'):
+        if not node_vars['openshift.node.schedulable']:
+            # Skip unschedulable nodes, unless these are explicitly skipped
             continue
 
         # Get a list of labels from the node
@@ -683,7 +684,7 @@ def lib_utils_oo_get_node_labels(source, hostvars=None):
 def lib_utils_oo_has_no_matching_selector(source, selector=None):
     ''' Return True when selector cannot be placed
         on nodes with labels from source '''
-    #Empty selector means any node
+    # Empty selector means any node
     if not selector:
         return False
     for item in source:

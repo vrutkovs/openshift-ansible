@@ -663,6 +663,14 @@ def set_nodename(facts):
     return facts
 
 
+def set_schedulable(facts):
+    """ set schedulable """
+    default_value = True
+    if 'node' in facts:
+        facts['node']['schedulable'] = facts.get('openshift_schedulable') or default_value
+    return facts
+
+
 def format_url(use_ssl, hostname, port, path=''):
     """ Format url based on ssl flag, hostname, port and path
 
@@ -1390,6 +1398,7 @@ class OpenShiftFacts(object):
         facts = set_builddefaults_facts(facts)
         facts = set_buildoverrides_facts(facts)
         facts = set_nodename(facts)
+        facts = set_schedulable(facts)
         return dict(openshift=facts)
 
     def get_defaults(self, roles, deployment_type, deployment_subtype):
