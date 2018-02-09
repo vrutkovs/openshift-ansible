@@ -741,7 +741,9 @@ def oo_component_persistent_volumes(hostvars, groups, component, subcomponent=No
                             if 'oo_nfs_to_config' in groups and len(groups['oo_nfs_to_config']) > 0:
                                 host = groups['oo_nfs_to_config'][0]
                             else:
-                                raise errors.AnsibleFilterError("|failed no storage host detected")
+                                raise errors.AnsibleFilterError("|failed no storage host detected - %s, %s, %s" % (
+                                    groups, 'oo_nfs_to_config' in groups, len(groups['oo_nfs_to_config'])
+                                ))
                         directory = params['nfs']['directory']
                         volume = params['volume']['name']
                         path = directory + '/' + volume
