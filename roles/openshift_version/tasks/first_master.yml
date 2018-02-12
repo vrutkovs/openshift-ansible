@@ -28,3 +28,12 @@
   - set_fact:
       openshift_image_tag: v{{ openshift_version }}
   when: openshift_image_tag is not defined
+
+# The end result of these three variables is quite important so make sure they are displayed and logged:
+- debug: var=openshift_release
+
+- debug: var=openshift_image_tag
+
+- debug: var=openshift_pkg_version
+
+- debug: var=openshift_version

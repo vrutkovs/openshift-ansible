@@ -24,10 +24,4 @@
       openshift_pkg_version: "{{ l_first_master_openshift_pkg_version }}"
       openshift_image_tag: "{{ l_first_master_openshift_image_tag }}"
 
-# NOTE: These steps should only be run against masters and nodes.
-- name: Ensure the requested version packages are available.
-  hosts: "{{ l_openshift_version_check_hosts | default('oo_nodes_to_config:oo_masters_to_config:!oo_first_master') }}"
-  tasks:
-  - include_role:
-      name: openshift_version
-      tasks_from: masters_and_nodes.yml
+- import_playbook: version_check.yml
