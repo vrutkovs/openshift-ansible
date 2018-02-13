@@ -37,7 +37,7 @@
       l_double_upgrade_first_version: "3.8.0"
       l_double_upgrade_first_release: "3.8"
       l_double_upgrade_first_tag: "v3.8.0"
-      l_double_upgrade_first_pkgv: "-3.8.0"
+      l_double_upgrade_first_pkgv: "-3.8.*"
     when: hostvars[groups.oo_first_master.0].openshift_currently_installed_version | version_compare('3.8','<')
 
 - import_playbook: ../pre/config.yml
