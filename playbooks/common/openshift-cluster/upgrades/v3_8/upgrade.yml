@@ -54,5 +54,6 @@
       state: started
 
 - import_playbook: ../upgrade_nodes.yml
+  when: openshift_deployment_type == "origin"
 
 - import_playbook: ../post_control_plane.yml
