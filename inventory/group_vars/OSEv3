@@ -1,0 +1,116 @@
+osm_default_node_selector: "region=infra"
+osm_controller_args:
+  enable-hostpath-provisioner:
+    - "true"
+openshift_hosted_router_selector: "region=infra"
+openshift_hosted_router_create_certificate: true
+openshift_hosted_registry_selector: "region=infra"
+openshift_master_audit_config:
+  enabled: true
+openshift_master_identity_providers:
+  - name: "allow_all"
+    login: "true"
+    challenge: "true"
+    kind: "AllowAllPasswordIdentityProvider"
+openshift_template_service_broker_namespaces:
+  - "openshift"
+enable_excluders: "true"
+osm_cluster_network_cidr: "10.128.0.0/14"
+openshift_portal_net: "172.30.0.0/16"
+osm_host_subnet_length: 9
+openshift_check_min_host_disk_gb: 10
+openshift_check_min_host_memory_gb: 8
+openshift_disable_check: package_update,package_availability,memory_availability,disk_availability
+
+openshift_logging_use_mux: false
+openshift_logging_use_ops: true
+openshift_logging_es_log_appenders:
+  - "console"
+openshift_logging_fluentd_journal_read_from_head: false
+openshift_logging_fluentd_audit_container_engine: true
+
+openshift_logging_curator_cpu_request: "100m"
+openshift_logging_curator_memory_limit: "32Mi"
+openshift_logging_curator_ops_cpu_request: "100m"
+openshift_logging_curator_ops_memory_limit: "32Mi"
+openshift_logging_elasticsearch_proxy_cpu_request: "100m"
+openshift_logging_elasticsearch_proxy_memory_limit: "32Mi"
+openshift_logging_es_cpu_request: "400m"
+openshift_logging_es_memory_limit: "4Gi"
+openshift_logging_es_ops_cpu_request: "400m"
+openshift_logging_es_ops_memory_limit: "4Gi"
+openshift_logging_eventrouter_cpu_request: "100m"
+openshift_logging_eventrouter_memory_limit: "64Mi"
+openshift_logging_fluentd_cpu_request: "100m"
+openshift_logging_fluentd_memory_limit: "256Mi"
+openshift_logging_kibana_cpu_request: "100m"
+openshift_logging_kibana_memory_limit: "128Mi"
+openshift_logging_kibana_ops_cpu_request: "100m"
+openshift_logging_kibana_ops_memory_limit: "128Mi"
+openshift_logging_kibana_ops_proxy_cpu_request: "100m"
+openshift_logging_kibana_ops_proxy_memory_limit: "64Mi"
+openshift_logging_kibana_proxy_cpu_request: "100m"
+openshift_logging_kibana_proxy_memory_limit: "64Mi"
+openshift_logging_mux_cpu_request: "400m"
+openshift_logging_mux_memory_limit: "256Mi"
+
+# TODO: remove this once we have oauth-proxy images built that are in step
+#       with the logging images (version and prefix)
+openshift_logging_elasticsearch_proxy_image_prefix: "docker.io/openshift/"
+openshift_logging_elasticsearch_proxy_image_version: "v1.0.0"
+
+# See https://console.reg-aws.openshift.com/console/command-line
+reg_name: registry.reg-aws.openshift.com
+reg_token: "{{ lookup('env','REG_TOKEN') }}"
+reg_openshift_prefix: "registry.reg-aws.openshift.com/openshift3"
+aos_repo: https://mirror.ops.rhcloud.com/enterprise/online-int/latest/x86_64/os/
+reg_s2i_prefix: registry.access.redhat.com/openshift3
+
+openshift_docker_additional_registries: registry.reg-aws.openshift.com
+oreg_url: registry.reg-aws.openshift.com/openshift3/ose-${component}:${version}
+system_images_registry: registry.reg-aws.openshift.com
+# # See https://console.reg-aws.openshift.com/console/command-line
+oreg_auth_user: "{{ lookup('env','REG_USERNAME') }}"
+oreg_auth_password: "{{ lookup('env','REG_TOKEN') }}"
+
+openshift_node_port_range: '30000-32000'
+
+openshift_node_labels:
+  region: infra
+  zone: default
+openshift_schedulable: True
+
+#No services
+openshift_metrics_install_metrics: false
+openshift_metrics_cassandra_storage_type: dynamic
+openshift_metrics_install_logging: false
+openshift_logging_storage_kind: dynamic
+openshift_web_console_install: false
+openshift_management_install_management: false
+openshift_hosted_prometheus_deploy: false
+template_service_broker_install: false
+ansible_service_broker_install: false
+openshift_enable_service_catalog: false
+osm_use_cockpit: false
+
+# All services
+# openshift_metrics_install_metrics: true
+# openshift_metrics_cassandra_storage_type: dynamic
+# openshift_metrics_install_logging: true
+# openshift_logging_storage_kind: dynamic
+# openshift_web_console_install: true
+# openshift_management_install_management: true
+# openshift_management_install_beta: true
+# openshift_management_storage_class: cloudprovider
+# openshift_hosted_prometheus_deploy: true
+# template_service_broker_install: true
+# openshift_enable_service_catalog: true
+# osm_use_cockpit: true
+
+# Custom image prefixes
+# openshift_logging_image_prefix: registry.reg-aws.openshift.com/openshift3/ose-
+# openshift_prometheus_image_prefix: registry.reg-aws.openshift.com/openshift3/
+# openshift_metrics_image_prefix: registry.reg-aws.openshift.com/openshift3/
+# openshift_service_catalog_image_prefix: registry.reg-aws.openshift.com/openshift3/ose-
+# template_service_broker_prefix: registry.reg-aws.openshift.com/openshift3/ose-
+# openshift_web_console_prefix: registry.reg-aws.openshift.com/openshift3/ose-

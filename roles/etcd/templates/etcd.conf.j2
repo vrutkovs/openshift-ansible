@@ -12,7 +12,7 @@ ETCD_NAME={{ etcd_hostname }}
 ETCD_LISTEN_PEER_URLS={{ etcd_listen_peer_urls }}
 ETCD_DATA_DIR={{ etcd_data_dir }}
 #ETCD_WAL_DIR=""
-#ETCD_SNAPSHOT_COUNT=10000
+ETCD_SNAPSHOT_COUNT=1000
 ETCD_HEARTBEAT_INTERVAL=500
 ETCD_ELECTION_TIMEOUT=2500
 ETCD_LISTEN_CLIENT_URLS={{ etcd_listen_client_urls }}
@@ -44,7 +44,7 @@ ETCD_INITIAL_CLUSTER_TOKEN={{ etcd_initial_cluster_token }}
 ETCD_ADVERTISE_CLIENT_URLS={{ etcd_advertise_client_urls }}
 #ETCD_STRICT_RECONFIG_CHECK="false"
 #ETCD_AUTO_COMPACTION_RETENTION="0"
-#ETCD_ENABLE_V2="true"
+ETCD_ENABLE_V2="true"
 ETCD_QUOTA_BACKEND_BYTES={{ etcd_quota_backend_bytes }}
 
 #[proxy]

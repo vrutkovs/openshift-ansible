@@ -1,0 +1,68 @@
+
+OSEv3:
+  vars:
+    ansible_become: true
+    ansible_become_sudo: true
+    ansible_python_interpreter: "/usr/bin/python"
+    openshift_deployment_type: openshift-enterprise
+    #openshift_deployment_type: origin
+    #openshift_release: v3.7
+    #openshift_image_tag: "v3.9.0-alpha.1"
+    ansible_user: "root"
+    openshift_cloudprovider_kind: aws
+    openshift_cloudprovider_aws_access_key: "{{ lookup('env','AWS_ACCESS_KEY_ID') }}"
+    openshift_cloudprovider_aws_secret_key: "{{ lookup('env','AWS_SECRET_ACCESS_KEY') }}"
+    openshift_clusterid: "vrutkovs"
+    openshift_hostname_check: false
+    openshift_master_cluster_method: native
+  children:
+    masters:
+      hosts:
+        vrutkovs_tmp.l9nXhccijG-master-1:
+          ansible_host: ec2-54-85-114-8.compute-1.amazonaws.com
+          aws_id: i-0279c096c1dd2f264
+          
+        vrutkovs_tmp.l9nXhccijG-master-2:
+          ansible_host: ec2-184-72-94-132.compute-1.amazonaws.com
+          aws_id: i-0f26e4c18f7d81cc8
+          
+        vrutkovs_tmp.l9nXhccijG-master-3:
+          ansible_host: ec2-34-235-121-150.compute-1.amazonaws.com
+          aws_id: i-0d311943c78b0af56
+          
+    nodes:
+      hosts:
+        vrutkovs_tmp.l9nXhccijG-node-1:
+          ansible_host: ec2-54-152-163-106.compute-1.amazonaws.com
+          aws_id: i-0f22702e5e97a5a04
+          
+        vrutkovs_tmp.l9nXhccijG-node-2:
+          ansible_host: ec2-52-90-124-197.compute-1.amazonaws.com
+          aws_id: i-04344ca799efeae12
+          
+    lb:
+      hosts:
+        {}
+
+    etcd:
+      hosts:
+        vrutkovs_tmp.l9nXhccijG-master-1:
+          ansible_host: ec2-54-85-114-8.compute-1.amazonaws.com
+          aws_id: i-0279c096c1dd2f264
+          
+        vrutkovs_tmp.l9nXhccijG-master-2:
+          ansible_host: ec2-184-72-94-132.compute-1.amazonaws.com
+          aws_id: i-0f26e4c18f7d81cc8
+          
+        vrutkovs_tmp.l9nXhccijG-master-3:
+          ansible_host: ec2-34-235-121-150.compute-1.amazonaws.com
+          aws_id: i-0d311943c78b0af56
+          
+    nfs:
+      hosts:
+        {}
+
+    glusterfs:
+      hosts:
+        {}
+
