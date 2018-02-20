@@ -120,7 +120,18 @@
     set_fact:
       r_etcd_migrate_success: true
 
-- include: ./scaleup.yml
+- name: Start etcd
+  hosts: oo_etcd_to_migrate
+  gather_facts: no
+  tags:
+  - always
+  tasks:
+  - name: Start etcd members
+    service:
+      name: "{{ l_etcd_service }}"
+      state: started
+    var:
+      l_etcd_service: "{{ 'etcd_container' if openshift.common.is_containerized else 'etcd' }}"
 
 - name: Gate on etcd migration
   hosts: oo_masters_to_config
