@@ -52,21 +52,21 @@
     r_etcd_common_embedded_etcd: "{{ groups.oo_etcd_to_config | default([]) | length == 0 }}"
     r_etcd_common_backup_sufix_name: "{{ lookup('pipe', 'date +%Y%m%d%H%M%S') }}"
 
-- name: Gate on etcd backup
-  hosts: localhost
-  connection: local
-  become: no
-  tasks:
-  - set_fact:
-      etcd_backup_completed: "{{ hostvars
-                                 | oo_select_keys(groups.oo_etcd_to_migrate)
-                                 | oo_collect('inventory_hostname', {'r_etcd_common_backup_complete': true}) }}"
-  - set_fact:
-      etcd_backup_failed: "{{ groups.oo_etcd_to_migrate | difference(etcd_backup_completed) | list }}"
-  - fail:
-      msg: "Migration cannot continue. The following hosts did not complete etcd backup: {{ etcd_backup_failed | join(',') }}"
-    when:
-    - etcd_backup_failed | length > 0
+# - name: Gate on etcd backup
+#   hosts: localhost
+#   connection: local
+#   become: no
+#   tasks:
+#   - set_fact:
+#       etcd_backup_completed: "{{ hostvars
+#                                  | oo_select_keys(groups.oo_etcd_to_migrate)
+#                                  | oo_collect('inventory_hostname', {'r_etcd_common_backup_complete': true}) }}"
+#   - set_fact:
+#       etcd_backup_failed: "{{ groups.oo_etcd_to_migrate | difference(etcd_backup_completed) | list }}"
+#   - fail:
+#       msg: "Migration cannot continue. The following hosts did not complete etcd backup: {{ etcd_backup_failed | join(',') }}"
+#     when:
+#     - etcd_backup_failed | length > 0
 
 - name: Stop etcd
   hosts: oo_etcd_to_migrate
