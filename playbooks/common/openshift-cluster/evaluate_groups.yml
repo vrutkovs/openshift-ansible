@@ -5,6 +5,11 @@
   become: no
   gather_facts: no
   tasks:
+  - name: Evaluate groups - valid inventory file
+    fail:
+      msg: No groups found - check that inventory file is valid
+    when: groups | list == ['all', 'ungrouped']
+
   - name: Evaluate groups - g_etcd_hosts or g_new_etcd_hosts required
     fail:
       msg: This playbook requires g_etcd_hosts or g_new_etcd_hosts to be set
