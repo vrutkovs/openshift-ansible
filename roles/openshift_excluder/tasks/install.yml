@@ -2,6 +2,7 @@
 
 - when:
   - not openshift_is_atomic | bool
+  - not openshift_docker_use_system_container | bool
   - r_openshift_excluder_install_ran is not defined
 
   block:
