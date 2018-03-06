@@ -79,7 +79,7 @@
       name: registry-console
     register: _registry_console
     when:
-    - openshift.common.deployment_type != 'origin'
+    - openshift_deployment_type != 'origin'
 
   - name: Update registry-console image to current version
     oc_edit:
@@ -89,7 +89,7 @@
       content:
         spec.template.spec.containers[0].image: "{{ registry_console_image }}"
     when:
-    - openshift.common.deployment_type != 'origin'
+    - openshift_deployment_type != 'origin'
     - _registry_console.results.results[0] != {}
 
   roles:
