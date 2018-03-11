@@ -30,10 +30,12 @@ kubeletArguments:
   - "true"
   cert-dir:
   - /etc/origin/node/certificates
+{% if openshift_node_group_cloud_provider is defined %}
   cloud-config:
   - /etc/origin/cloudprovider/{{ openshift_node_group_cloud_provider }}.conf
   cloud-provider:
   - {{ openshift_node_group_cloud_provider }}
+{% endif %}
   node-labels: 
   - "{{ openshift_node_group_labels | join(',') }}"
   enable-controller-attach-detach:

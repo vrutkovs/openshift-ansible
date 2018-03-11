@@ -1,7 +1,7 @@
 ---
 - name: Ensure that docker-gc will have nodes to run on
   import_role:
-    name: openshift_master
+    name: openshift_control_plane
     tasks_from: ensure_nodes_matching_selector.yml
   vars:
     openshift_master_ensure_nodes_selector: "{{ r_docker_gc_node_selectors | map_to_pairs }}"
