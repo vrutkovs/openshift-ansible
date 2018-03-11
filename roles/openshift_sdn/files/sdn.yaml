@@ -9,8 +9,8 @@ metadata:
       It expects that OVS is running on the node.
     image.openshift.io/triggers: |
       [
-        {"from":{"kind":"ImageStreamTag","name":"node:v3.9"},"fieldPath":"spec.template.spec.containers[?(@.name==\"sync\")].image"},
-        {"from":{"kind":"ImageStreamTag","name":"node:v3.9"},"fieldPath":"spec.template.spec.containers[?(@.name==\"sdn\")].image"}
+        {"from":{"kind":"ImageStreamTag","name":"node:v3.10"},"fieldPath":"spec.template.spec.containers[?(@.name==\"sync\")].image"},
+        {"from":{"kind":"ImageStreamTag","name":"node:v3.10"},"fieldPath":"spec.template.spec.containers[?(@.name==\"sdn\")].image"}
       ]
 spec:
   selector:

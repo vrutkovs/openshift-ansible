@@ -5,12 +5,6 @@
 # /etc/systemd/system/origin-node.service (origin) or
 # /etc/systemd/system/atomic-openshift-node.service (enterprise)
 
-- name: Pre-pull node system container image
-  command: >
-    atomic pull --storage=ostree {{ osn_image }}
-  register: pull_result
-  changed_when: "'Pulling layer' in pull_result.stdout"
-
 # TODO: remove when system container is fixed to not include it
 - name: Ensure old system path is set
   file:
@@ -21,7 +15,7 @@
 - name: Install or Update node system container
   oc_atomic_container:
     name: "{{ openshift_service_type }}-node"
-    image: "{{ osn_image }}"
+    image: "{{ system_osn_image }}"
     values:
     - "DNS_DOMAIN={{ openshift.common.dns_domain }}"
     - "DOCKER_SERVICE={{ openshift_docker_service_name }}.service"

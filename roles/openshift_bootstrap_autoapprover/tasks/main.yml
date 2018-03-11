@@ -9,6 +9,13 @@
   with_fileglob:
     - "*.yaml"
 
+- name: Update the image tag
+  run_once: true
+  yedit:
+    src: "/tmp/openshift-approver/openshift-bootstrap-images.yaml"
+    key: 'tag.from.name'
+    value: "{{ osn_image }}"
+
 - name: Set auto-approver nodeSelector
   run_once: true
   yedit:

@@ -24,7 +24,7 @@ openshift_oreg_url_default: "{{ openshift_oreg_url_default_dict[openshift_deploy
 oreg_url_node: "{{ oreg_url | default(openshift_oreg_url_default) | regex_replace('${version}' | regex_escape, openshift_image_tag | default('${version}')) }}"
 
 openshift_imageconfig_format: "{{ oreg_url_node }}"
-openshift_node_group_cloud_provider: "{{ openshift_cloudprovider_kind | default('aws') }}"
+openshift_node_group_cloud_provider: "{{ openshift_cloudprovider_kind | default(None) }}"
 openshift_node_group_network_plugin_default: "{{ os_sdn_network_plugin_name | default('redhat/openshift-ovs-subnet') }}"
 openshift_node_group_network_plugin: "{{ openshift_node_group_network_plugin_default }}"
 openshift_node_group_node_data_dir_default: "{{ openshift_data_dir | default('/var/lib/origin') }}"
