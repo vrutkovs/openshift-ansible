@@ -18,7 +18,7 @@ spec:
       terminationGracePeriodSeconds: 1
       containers:
       - name: signer
-        image: " "
+        image: "openshift/node:v3.10"
         command:
         - /bin/bash
         - -c
@@ -58,7 +58,7 @@ spec:
             if ! echo "\${text}" | openssl x509 -noout; then
               echo "error: Unable to parse certificate" 2>&1
               exit 1
-            fi 
+            fi
             if ! echo "\${text}" | openssl x509 -checkend -60 > /dev/null; then
               echo "Certificate is expired, deleting"
               oc delete csr "\${name}"
