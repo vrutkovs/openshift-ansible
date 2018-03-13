@@ -44,9 +44,9 @@ nodeName: {{ openshift.common.hostname }}
 podManifestConfig:
 servingInfo:
   bindAddress: 0.0.0.0:10250
-  certFile: server.crt
-  clientCA: ca.crt
-  keyFile: server.key
+  certFile: certificates/kubelet-client-current.pem
+  clientCA: client-ca.crt
+  keyFile: certificates/kubelet-client-current.pem
 {% if openshift_node_min_tls_version is defined %}
   minTLSVersion: {{ openshift_node_min_tls_version }}
 {% endif %}
