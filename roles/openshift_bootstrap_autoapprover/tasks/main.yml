@@ -27,6 +27,13 @@
 - name: Create auto-approver on cluster
   run_once: true
   command: "{{ openshift_client_binary }} --config={{ openshift.common.config_base }}/master/admin.kubeconfig apply -f /tmp/openshift-approver/"
+  register: autoapprover_apply
+  failed_when:
+    - "'AlreadyExists' not in autoapprover_apply.stderr"
+    - "'error' in autoapprover_apply.stderr"
+    - "generation_apply.rc != 0"
+  changed_when: no
+
 
 - name: Remove auto-approver config
   run_once: true
