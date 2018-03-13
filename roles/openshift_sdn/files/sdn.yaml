@@ -44,7 +44,7 @@ spec:
       # 2. Nodes must relabel themselves https://github.com/kubernetes/kubernetes/issues/59314
       #
       - name: sync
-        image: " "
+        image: "openshift/node:v3.10"
         command:
         - /bin/bash
         - -c
@@ -127,7 +127,7 @@ spec:
       # The network container launches the openshift-sdn process, the kube-proxy, and the local DNS service.
       # It relies on an up to date node-config.yaml being present.
       - name: sdn
-        image: " "
+        image: "openshift/node:v3.10"
         command: 
         - /bin/bash
         - -c
