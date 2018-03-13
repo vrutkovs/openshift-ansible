@@ -34,14 +34,13 @@ networkPluginName: {{ openshift_node_sdn_network_plugin_name }}
 # networkConfig struct introduced in origin 1.0.6 and OSE 3.0.2 which
 # deprecates networkPluginName above. The two should match.
 networkConfig:
-   mtu: {{ openshift.node.sdn_mtu }}
 {% if openshift_node_use_openshift_sdn | bool or openshift_node_use_nuage | bool or openshift_node_use_contiv | bool or openshift_node_use_kuryr | bool or openshift_node_sdn_network_plugin_name == 'cni' %}
    networkPluginName: {{ openshift_node_sdn_network_plugin_name }}
 {% endif %}
 {% if openshift_set_node_ip | bool %}
 nodeIP: {{ openshift.common.ip }}
 {% endif %}
-nodeName: {{ openshift.node.nodename }}
+nodeName: {{ openshift.common.hostname }}
 podManifestConfig:
 servingInfo:
   bindAddress: 0.0.0.0:10250
