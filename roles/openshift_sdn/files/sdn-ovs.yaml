@@ -30,7 +30,7 @@ spec:
       hostNetwork: true
       containers:
       - name: openvswitch
-        image: " "
+        image: "openshift/node:v3.10"
         command:
         - /bin/bash
         - -c
