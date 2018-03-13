@@ -4,6 +4,8 @@
     src: node-config.yaml.j2
     dest: "/etc/origin/node/bootstrap-node-config.yaml"
     mode: 0600
+  vars:
+    openshift_node_group_labels: "{{ openshift_node_groups | selectattr('name', 'match', 'node-config-master') | map(attribute='labels') | list | first }}"
 
 - name: remove existing node config
   file:
