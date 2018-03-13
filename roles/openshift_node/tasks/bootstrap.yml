@@ -55,6 +55,12 @@
   - /var/lib/origin/openshift.local.config
   - /var/lib/origin/openshift.local.config/node
   - "/etc/docker/certs.d/docker-registry.default.svc:5000"
+  - /etc/cni/net.d
+
+- name: Configure the CNI network
+  template:
+    dest: /etc/cni/net.d/openshift-sdn.conf
+    src: 80-openshift-sdn.conf.j2
 
 - name: laydown the bootstrap.yml file for on boot configuration
   template:
