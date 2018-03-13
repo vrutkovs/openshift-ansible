@@ -41,7 +41,13 @@
 
 - name: Apply the SDN config
   shell: >
-    {{ openshift_client_binary }} apply -f {{ mktemp.stdout }}
+    {{ openshift_client_binary }} --config={{ openshift.common.config_base }}/master/admin.kubeconfig apply --overwrite=true -f {{ mktemp.stdout }}
+  register: generation_apply
+  failed_when:
+    - "'AlreadyExists' not in generation_apply.stderr"
+    - "'error' in generation_apply.stderr"
+    - "generation_apply.rc != 0"
+  changed_when: no
 
 - name: Remove temp directory
   file:
