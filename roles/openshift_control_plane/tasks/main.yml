@@ -157,6 +157,12 @@
 
 - include_tasks: static.yml
 
+- name: Start and enable self-hosting node dependecy
+  systemd:
+    name: "{{ openshift_service_type }}-node-dep"
+    state: started
+    enabled: yes
+
 - name: Start and enable self-hosting node
   systemd:
     name: "{{ openshift_service_type }}-node"
