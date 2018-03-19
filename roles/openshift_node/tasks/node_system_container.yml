@@ -12,10 +12,16 @@
     path: "/etc/origin/openvswitch"
     mode: '0750'
 
+- name: Pre-pull node system container image
+  command: >
+    atomic pull --storage=ostree {{ system_osn_image }}
+  register: pull_result
+  changed_when: "'Pulling layer' in pull_result.stdout"
+
 - name: Install or Update node system container
   oc_atomic_container:
     name: "{{ openshift_service_type }}-node"
-    image: "{{ system_osn_image }}"
+    image: "{{ osn_image }}"
     values:
     - "DNS_DOMAIN={{ openshift.common.dns_domain }}"
     - "DOCKER_SERVICE={{ openshift_docker_service_name }}.service"
