@@ -10,7 +10,7 @@ After=dnsmasq.service
 {% if openshift_use_crio | bool %}Wants=cri-o.service{% endif %}
 
 [Service]
-Type=notify
+Type=simple
 EnvironmentFile=/etc/sysconfig/{{ openshift_service_type }}-node
 ExecStart=/usr/local/bin/openshift-node
 LimitNOFILE=65536
