@@ -29,6 +29,12 @@
   - line: "CONFIG_FILE={{ openshift_node_config_dir }}/bootstrap-node-config.yaml"
     regexp: "^CONFIG_FILE=.*"
 
+- name: Link node-config.yaml to bootstrap nodeconfig
+  file:
+    src: "{{ openshift_node_config_dir }}/bootstrap-node-config.yaml"
+    dest: "{{ openshift_node_config_dir }}/node-config.yaml"
+    state: link
+
 - name: include aws sysconfig credentials
   import_tasks: aws.yml
   when: not (openshift_node_use_instance_profiles | default(False))
