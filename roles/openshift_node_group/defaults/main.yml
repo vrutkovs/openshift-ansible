@@ -2,15 +2,15 @@
 openshift_node_groups:
 - name: node-config-master
   labels:
-  - 'type=master'
+  - 'node-role.kubernetes.io/master=true'
   edits: []
 - name: node-config-infra
   labels:
-  - 'type=infra'
+  - 'node-role.kubernetes.io/infra=true'
   edits: []
 - name: node-config-compute
   labels:
-  - 'type=compute'
+  - 'node-role.kubernetes.io/compute=true'
   edits: []
 
 openshift_node_group_edits: []
