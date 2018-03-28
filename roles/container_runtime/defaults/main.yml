@@ -83,8 +83,7 @@ docker_no_proxy: "{{ openshift.common.no_proxy | default('') }}"
 openshift_use_crio: False
 openshift_use_crio_only: False
 
-l_openshift_image_tag_default: "{{ 'v' ~ openshift_release if openshift_release is defined else 'latest' }}"
-l_openshift_image_tag: "{{ openshift_image_tag | default(l_openshift_image_tag_default) | string}}"
+l_openshift_image_tag: "{{ openshift_image_tag | string }}"
 
 l_required_docker_version: '1.12'
 
