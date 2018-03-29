@@ -45,7 +45,7 @@
 
 - name: Gather facts from nodes to bootstrap
   hosts: oo_nodes_to_bootstrap
-  serial: 1
+  gather_facts: no
   tasks:
   - name: Gather node information
     openshift_facts:
