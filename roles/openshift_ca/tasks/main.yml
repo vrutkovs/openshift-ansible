@@ -234,21 +234,52 @@
         --signer-key="{{ openshift_ca_config_dir }}/front-proxy-ca.key"
         --signer-serial={{ openshift_ca_serial }}
         --expire-days={{ openshift_master_cert_expire_days }}
-  - name: Copy generated loopback master client config to master config dir
+  - name: Copy front-proxy-ca.crt
     copy:
-      src: "{{ openshift_ca_loopback_tmpdir.stdout }}/{{ item }}"
-      dest: "{{ openshift_ca_config_dir }}"
+      src: "{{ openshift_ca_config_dir }}/front-proxy-ca.crt"
+      dest: "{{ openshift_ca_loopback_tmpdir.stdout }}"
       remote_src: true
-    with_items:
-    - aggregator-front-proxy.crt
-    - aggregator-front-proxy.key
-    - aggregator-front-proxy.kubeconfig
-  - name: Delete temp directory
-    file:
-      name: "{{ openshift_ca_loopback_tmpdir.stdout }}"
-      state: absent
   delegate_to: "{{ openshift_ca_host }}"
   run_once: true
+
+- name: Create a tarball of the openshift aggregator certs
+  command: >
+    tar -czvf {{ openshift_ca_loopback_tmpdir.stdout }}.tgz
+      -C {{ openshift_ca_loopback_tmpdir.stdout }} .
+  args:
+    creates: "{{ openshift_ca_loopback_tmpdir.stdout }}.tgz"
+    # Disables the following warning:
+    # Consider using unarchive module rather than running tar
+    warn: no
+  delegate_to: "{{ openshift_ca_host }}"
+
+- name: Retrieve the aggregator cert tarballs
+  fetch:
+    src: "{{ openshift_ca_loopback_tmpdir.stdout }}.tgz"
+    dest: "/tmp"
+    fail_on_missing: yes
+    validate_checksum: yes
+  delegate_to: "{{ openshift_ca_host }}"
+
+- name: Ensure certificate directory exists
+  file:
+    path: "{{ openshift_ca_config_dir }}"
+    state: directory
+
+- name: Unarchive aggregator cert tarballs
+  unarchive:
+    src: "/tmp/{{ inventory_hostname }}/{{ openshift_ca_loopback_tmpdir.stdout }}.tgz"
+    dest: "{{ openshift_ca_config_dir }}"
+
+- name: Delete temporary directory
+  local_action: file path="/tmp/{{ inventory_hostname }}" state=absent
+  changed_when: False
+
+- name: Delete temp directory
+  file:
+    name: "{{ openshift_ca_loopback_tmpdir.stdout }}"
+    state: absent
+  delegate_to: "{{ openshift_ca_host }}"
 
 - name: Restore original serviceaccount keys
   copy:
