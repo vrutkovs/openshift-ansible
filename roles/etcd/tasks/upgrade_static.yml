@@ -2,6 +2,9 @@
 # PREREQ Node service is ready to run static pods
 
 # INPUT r_etcd_upgrade_version
+
+- include_tasks: runtime.yml
+
 - name: Verify cluster is healthy pre-upgrade
   command: "{{ etcdctlv2 }} cluster-health"
 
@@ -17,16 +20,19 @@
 # Need to stop and disable this service, but might not be present.
 - name: Stop, disable and mask old etcd service
   systemd:
-    name: "etcd"
+    name: "{{ item }}"
     state: stopped
     enabled: no
     masked: yes
     daemon_reload: yes
+  with_items:
+  - etcd
+  - etcd_container
   failed_when: False
 
 - name: Remove etcd system container
   oc_atomic_container:
-    name: etcd
+    name: etcd_container
     image: "{{ etcd_image }}"
     state: absent
 
@@ -40,6 +46,8 @@
 
 - name: Configure static definition
   import_tasks: static.yml
+
+- include_tasks: runtime.yml
 
 - name: Verify cluster is healthy
   command: "{{ etcdctlv2 }} cluster-health"

@@ -1,6 +1,8 @@
 ---
 - include_tasks: vars.yml
 
+- include_tasks: ../runtime.yml
+
 # TODO: replace shell module with command and update later checks
 - name: Check available disk space for etcd backup
   shell: df --output=avail -k {{ etcd_data_dir }} | tail -n 1
