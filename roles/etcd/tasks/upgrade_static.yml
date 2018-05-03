@@ -15,21 +15,25 @@
 
 # We removed the ability to detect what was previously 'containerized'
 # Need to stop and disable this service, but might not be present.
-- name: Stop, disable old etcd services
+- name: Stop, disable and mask old etcd service
   systemd:
-    name: "{{ item }}"
+    name: "etcd"
     state: stopped
     enabled: no
+    masked: yes
+    daemon_reload: yes
   failed_when: False
-  with_items:
-  - etcd
-  - etcd_container
 
-- name: Mask old etcd services
-  command: "systemctl mask {{ etcd_service }}"
-  with_items:
-  - etcd
-  - etcd_container
+- name: Remove etcd system container
+  oc_atomic_container:
+    name: etcd
+    image: "{{ etcd_image }}"
+    state: absent
+
+- name: Systemd reload configuration
+  systemd:
+    name: etcd_container
+    daemon_reload: yes
 
 - name: Reload systemd daemon
   command: "systemctl daemon-reload"
