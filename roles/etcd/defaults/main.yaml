@@ -28,6 +28,12 @@ etcdctl_dict:
   runc: 'runc exec etcd etcdctl'
 r_etcd_common_etcdctl_command: "{{ etcdctl_dict[r_etcd_common_etcd_runtime | default('runc')] }}"
 
+etcd_container_version_dict:
+  docker: "docker exec etcd_container rpm -qa --qf '%{version}' etcd*"
+  runc: "runc exec etcd rpm -qa --qf '%{version}' etcd*"
+  static_pod: "/usr/local/bin/master-exec etcd etcd rpm -qa --qf '%{version}' etcd*"
+r_etcd_container_version_command: "{{ etcd_container_version_dict[r_etcd_common_etcd_runtime | default('runc')] }}"
+
 # etcd server vars
 etcd_conf_dir: '/etc/etcd'
 etcd_conf_file: "{{ etcd_conf_dir }}/etcd.conf"

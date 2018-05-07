@@ -15,56 +15,16 @@
   - not openshift_is_containerized | bool
 
 - block:
-  - name: Record containerized etcd version (docker)
-    command: docker exec etcd_container rpm -qa --qf '%{version}' etcd\*
-    register: etcd_container_version_docker
+  - name: Record containerized etcd version
+    command: "{{ r_etcd_container_version_command }}"
+    register: etcd_container_version_result
     failed_when: false
     # AUDIT:changed_when: `false` because we are only inspecting
     # state, not manipulating anything
     changed_when: false
-    when:
-    - not l_is_etcd_system_container | bool and not l_etcd_static_pod | bool
 
-    # Given a register variables is set even if the whwen condition
-    # is false, we need to set etcd_container_version separately
   - set_fact:
-      etcd_container_version: "{{ etcd_container_version_docker.stdout }}"
-    when:
-    - not l_is_etcd_system_container | bool and not l_etcd_static_pod | bool
-
-  - name: Record containerized etcd version (runc)
-    command: runc exec etcd rpm -qa --qf '%{version}' etcd\*
-    register: etcd_container_version_runc
-    failed_when: false
-    # AUDIT:changed_when: `false` because we are only inspecting
-    # state, not manipulating anything
-    changed_when: false
-    when:
-    - l_is_etcd_system_container | bool and not l_etcd_static_pod | bool
-
-    # Given a register variables is set even if the whwen condition
-    # is false, we need to set etcd_container_version separately
-  - set_fact:
-      etcd_container_version: "{{ etcd_container_version_runc.stdout }}"
-    when:
-    - l_is_etcd_system_container | bool and not l_etcd_static_pod
-
-  - name: Record etcd version (static pod)
-    command: /usr/local/bin/master-exec etcd etcd rpm -qa --qf '%{version}' etcd\*
-    register: etcd_container_version_static_pod
-    failed_when: false
-    # AUDIT:changed_when: `false` because we are only inspecting
-    # state, not manipulating anything
-    changed_when: false
-    when:
-    - l_etcd_static_pod | bool
-
-    # Given a register variables is set even if the whwen condition
-    # is false, we need to set etcd_container_version separately
-  - set_fact:
-      etcd_container_version: "{{ etcd_container_version_static_pod.stdout }}"
-    when:
-    - l_etcd_static_pod | bool
+      etcd_container_version: "{{ etcd_container_version_result.stdout }}"
 
   - debug:
       msg: "Etcd containerized version {{ etcd_container_version }} detected"
