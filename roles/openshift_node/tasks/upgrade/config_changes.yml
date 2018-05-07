@@ -63,6 +63,7 @@
   when:
   - ansible_selinux is defined
   - ansible_selinux.status == 'enabled'
+  - openshift_is_bootstrapped | bool
 
 - name: Update systemd units
   import_tasks: ../systemd_units.yml
