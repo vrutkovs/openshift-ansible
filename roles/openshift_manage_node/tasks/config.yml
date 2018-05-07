@@ -7,7 +7,9 @@
   delay: 5
   register: node_schedulable
   until: node_schedulable is succeeded
-  when: "'nodename' in openshift.node"
+  when:
+  - "'nodename' in openshift.node"
+  - openshift_is_bootstrapped | bool
   delegate_to: "{{ openshift_master_host }}"
 
 - name: Label nodes
@@ -19,6 +21,7 @@
     namespace: default
   when:
     - "'nodename' in openshift.node"
+    - openshift_is_bootstrapped | bool
     - l_all_labels != {}
   delegate_to: "{{ openshift_master_host }}"
   vars:
