@@ -1,0 +1,248 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  name: openshift-console
+  annotations:
+    openshift.io/display-name: OpenShift Console
+    description: The server for the OpenShift console.
+    iconClass: icon-openshift
+    tags: openshift,infra
+    openshift.io/support-url: https://access.redhat.com
+    openshift.io/provider-display-name: Red Hat, Inc.
+parameters:
+- name: IMAGE
+  value: quay.io/coreos/tectonic-console:v6.0.6
+  required: true
+- name: NAMESPACE
+  # This namespace cannot be changed. Only `openshift-console` is supported.
+  value: openshift-console
+  required: true
+- name: CONSOLE_HOSTNAME
+  value: console.router.default.svc.cluster.local
+  required: true
+- name: API_SERVER_URL
+  value: https://kubernetes.default.svc
+  required: true
+- name: NODE_SELECTOR
+  value: "{}"
+  required: true
+- name: REPLICA_COUNT
+  value: "1"
+  required: true
+- name: OAUTH_CLIENT_ID
+  # This cannot be changed. Only `openshift-console` is supported.
+  value: openshift-console
+  required: true
+- name: OAUTH_SECRET
+  generate: expression
+  from: "[a-zA-Z0-9]{32}"
+- name: LOGO_IMAGE_NAME
+  value: os-origin
+  description: Determines which OpenShift logo to use, 'os-origin', 'os-platform', or 'os-online'.
+  required: true
+- name: CLUSTER_NAME
+  value: openshift
+  required: true
+objects:
+
+# to create the web console server
+- apiVersion: apps/v1beta1
+  kind: Deployment
+  metadata:
+    name: console
+    namespace: ${NAMESPACE}
+    labels:
+      app: openshift-console
+      component: ui
+  spec:
+    selector:
+      matchLabels:
+        app: openshift-console
+        component: ui
+    # use a recreate strategy for now since we don't have sticky sessions
+    strategy:
+      type: Recreate
+    template:
+      metadata:
+        labels:
+          app: openshift-console
+          component: ui
+        name: console
+      spec:
+        affinity:
+          podAntiAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: openshift-console
+                topologyKey: kubernetes.io/hostname
+        containers:
+        - command:
+          - /opt/bridge/bin/bridge
+          env:
+          - name: BRIDGE_K8S_MODE
+            value: in-cluster
+          - name: BRIDGE_K8S_AUTH
+            value: openshift
+          - name: BRIDGE_LISTEN
+            value: https://0.0.0.0:8443
+          - name: BRIDGE_TLS_CERT_FILE
+            value: /var/serving-cert/tls.crt
+          - name: BRIDGE_TLS_KEY_FILE
+            value: /var/serving-cert/tls.key
+          - name: BRIDGE_BASE_ADDRESS
+            valueFrom:
+              configMapKeyRef:
+                name: console-config
+                key: consoleBaseAddress
+          - name: BRIDGE_PUBLIC_DIR
+            value: /opt/bridge/static
+          - name: BRIDGE_USER_AUTH
+            value: openshift
+          - name: BRIDGE_USER_AUTH_OIDC_ISSUER_URL
+            value: ${API_SERVER_URL}
+          - name: BRIDGE_USER_AUTH_OIDC_CLIENT_ID
+            valueFrom:
+              secretKeyRef:
+                name: console-oauth-config
+                key: consoleClientID
+          - name: BRIDGE_USER_AUTH_OIDC_CLIENT_SECRET_FILE
+            value: /var/oauth-config/consoleSecret
+          - name: BRIDGE_TECTONIC_CLUSTER_NAME
+            valueFrom:
+              configMapKeyRef:
+                name: console-config
+                key: clusterName
+          - name: BRIDGE_LOGO_IMAGE_NAME
+            value: ${LOGO_IMAGE_NAME}
+          - name: BRIDGE_CA_FILE
+            value: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+          image: ${IMAGE}
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /health
+              port: 8443
+              scheme: HTTPS
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          name: console
+          ports:
+          - containerPort: 8443
+            protocol: TCP
+          resources:
+            limits:
+              cpu: 100m
+              memory: 100Mi
+            requests:
+              cpu: 100m
+              memory: 100Mi
+          terminationMessagePath: /dev/termination-log
+          volumeMounts:
+          - mountPath: /var/serving-cert
+            name: serving-cert
+            readOnly: true
+          - mountPath: /var/oauth-config
+            name: oauth-config
+            readOnly: true
+        dnsPolicy: ClusterFirst
+        replicas: "${{REPLICA_COUNT}}"
+        restartPolicy: Always
+        terminationGracePeriodSeconds: 30
+        volumes:
+        - name: serving-cert
+          secret:
+            defaultMode: 400
+            secretName: console-serving-cert
+        - name: oauth-config
+          secret:
+            defaultMode: 400
+            secretName: console-oauth-config
+        nodeSelector: "${{NODE_SELECTOR}}"
+
+# to create the config for the cluster console
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    namespace: ${NAMESPACE}
+    name: console-config
+    labels:
+      app: openshift-console
+  data:
+    consoleBaseAddress: https://${CONSOLE_HOSTNAME}/
+    clusterName: ${CLUSTER_NAME}
+    apiServerURL: ${API_SERVER_URL}
+
+# to store the OAauth client ID and secret
+- apiVersion: v1
+  kind: Secret
+  metadata:
+    namespace: ${NAMESPACE}
+    name: console-oauth-config
+    labels:
+      app: openshift-console
+  stringData:
+    consoleClientID: ${OAUTH_CLIENT_ID}
+    consoleSecret: ${OAUTH_SECRET}
+
+# to be able to assign powers to the process
+- apiVersion: v1
+  kind: ServiceAccount
+  metadata:
+    namespace: ${NAMESPACE}
+    name: console
+    labels:
+      app: openshift-console
+
+# to be able to expose cluster console inside the cluster
+- apiVersion: v1
+  kind: Service
+  metadata:
+    namespace: ${NAMESPACE}
+    name: console
+    labels:
+      app: openshift-console
+    annotations:
+      service.alpha.openshift.io/serving-cert-secret-name: console-serving-cert
+  spec:
+    selector:
+      app: openshift-console
+      component: ui
+    ports:
+    - name: https
+      port: 443
+      targetPort: 8443
+
+# to be able to expose cluster console outside the cluster
+- apiVersion: v1
+  kind: Route
+  metadata:
+    namespace: ${NAMESPACE}
+    name: console
+    labels:
+      app: openshift-console
+  spec:
+    host: ${CONSOLE_HOSTNAME}
+    to:
+      kind: Service
+      name: console
+    port:
+      targetPort: https
+    tls:
+      insecureEdgeTerminationPolicy: Redirect
+      termination: reencrypt
+
+# to be able to login to OpenShift
+- apiVersion: oauth.openshift.io/v1
+  kind: OAuthClient
+  metadata:
+    name: ${OAUTH_CLIENT_ID}
+  grantMethod: auto
+  secret: ${OAUTH_SECRET}
+  redirectURIs:
+  - https://${CONSOLE_HOSTNAME}/

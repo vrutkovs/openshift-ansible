@@ -1,0 +1,53 @@
+---
+- name: Ensure openshift-console project exists
+  oc_project:
+    name: openshift-console
+    state: present
+    node_selector:
+    - ""
+  register: create_console_project
+
+- name: Make temp directory for console templates
+  command: mktemp -d /tmp/console-ansible-XXXXXX
+  register: mktemp
+  changed_when: False
+
+- name: Copy admin client config
+  command: >
+    cp {{ openshift.common.config_base }}/master//admin.kubeconfig {{ mktemp.stdout }}/admin.kubeconfig
+  changed_when: false
+
+- name: Copy console templates to temp directory
+  copy:
+    src: "{{ __console_template_file }}"
+    dest: "{{ mktemp.stdout }}/{{ __console_template_file }}"
+
+- name: Apply the console template file
+  shell: >
+    {{ openshift_client_binary }} process -f "{{ mktemp.stdout }}/{{ __console_template_file }}"
+    --param IMAGE="{{ openshift_console_image_name }}"
+    --param NODE_SELECTOR={{ openshift_console_nodeselector | to_json | quote }}
+    --param REPLICA_COUNT="{{ openshift_console_replica_count }}"
+    --param CONSOLE_HOSTNAME="{{ openshift_console_hostname }}"
+    --param API_SERVER_URL="{{ openshift.master.public_api_url }}"
+    --param LOGO_IMAGE_NAME="{{ openshift_console_logo_image_name }}"
+    --config={{ mktemp.stdout }}/admin.kubeconfig
+    | {{ openshift_client_binary }} apply --config={{ mktemp.stdout }}/admin.kubeconfig -f -
+
+- name: Remove temp directory
+  file:
+    state: absent
+    name: "{{ mktemp.stdout }}"
+  changed_when: False
+
+# Wait to give the rollout time to start before verifying that the console is
+# running. Unfortunately, we can't check if the deployment revision changed
+# because it's possible applying the template did not result in any changes to
+# the pod template spec, which would skip a new revision.
+- name: Pause for the console deployment to start
+  pause:
+    seconds: 30
+  # Skip if the project didn't exist since there was no previous deployment.
+  when: not create_console_project.changed
+
+- include_tasks: start.yml
