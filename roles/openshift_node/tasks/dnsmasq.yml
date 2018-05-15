@@ -9,6 +9,7 @@
   template:
     src: node-dnsmasq.conf.j2
     dest: /etc/dnsmasq.d/node-dnsmasq.conf
+  when: not openshift_is_atomic
   notify: restart dnsmasq
 
 - name: Deploy additional dnsmasq.conf
