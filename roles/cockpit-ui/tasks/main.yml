@@ -29,21 +29,21 @@
         OPENSHIFT_OAUTH_PROVIDER_URL: "{{ openshift.master.public_api_url }}"
         REGISTRY_HOST: "{{ docker_registry_route.results[0].spec.host }}"
         COCKPIT_KUBE_URL: "https://{{ registry_console_cockpit_kube.results.results[0].spec.host }}"
-        NODE_SELECTOR: "{{ openshift_hosted_registry_console_nodeselector }}"
+        NODE_SELECTOR: "{{ openshift_hosted_registry_console_nodeselector | map_from_pairs }}"
 
-  - name: Update image prefix
+  - name: Set image prefix
     set_fact:
       l_registry_console_params: >
        {{ l_registry_console_params | combine({"IMAGE_PREFIX": openshift_cockpit_deployer_prefix }) }}
     when: openshift_cockpit_deployer_prefix is defined
 
-  - name: Update image basename
+  - name: Set image basename
     set_fact:
       l_registry_console_params: >
         {{ l_registry_console_params | combine({"IMAGE_BASENAME": openshift_cockpit_deployer_basename }) }}
     when: openshift_cockpit_deployer_basename is defined
 
-  - name: Update image version
+  - name: Set image version
     set_fact:
       l_registry_console_params: >
         {{ l_registry_console_params | combine({"IMAGE_VERSION": openshift_cockpit_deployer_version }) }}
@@ -52,6 +52,7 @@
   - name: Deploy registry-console
     oc_process:
       namespace: "default"
+      # use registry-console template from openshift namespace
       template_name: "openshift//registry-console"
       create: True
       params: "{{ l_registry_console_params }}"
