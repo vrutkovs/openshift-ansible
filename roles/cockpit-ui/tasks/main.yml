@@ -37,6 +37,7 @@
       cp /etc/origin/master/admin.kubeconfig {{ openshift_hosted_kubeconfig }}
     changed_when: False
 
+  # XXX: openshift-
   - name: Deploy registry-console
     command: >
       {{ openshift_client_binary }} new-app --template=registry-console
@@ -46,6 +47,7 @@
       -p OPENSHIFT_OAUTH_PROVIDER_URL="{{ openshift.master.public_api_url }}"
       -p REGISTRY_HOST="{{ docker_registry_route.results[0].spec.host }}"
       -p COCKPIT_KUBE_URL="https://{{ registry_console_cockpit_kube.results.results[0].spec.host }}"
+      -p NODE_SELECTOR="{{ openshift_hosted_registry_console_nodeselector | map_from_pairs | to_json }}"
       --config={{ openshift_hosted_kubeconfig }}
       -n default
     register: deploy_registry_console
