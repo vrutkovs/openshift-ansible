@@ -69,7 +69,7 @@ options:
     - ['cert', 'key', 'signer_cert', 'signer_key', 'signer_serial']
     required: false
     default: present
-    choices: 
+    choices:
     - present
     aliases: []
   kubeconfig:
@@ -1032,6 +1032,12 @@ class OpenShiftCLI(object):
         # Name cannot be used with selector or field_selector.
         if selector is None and field_selector is None and name is not None:
             cmd.append(name)
+
+        # If resourse is a template it may be in 'template//name' format
+        if resource == 'template' and '//' in name:
+            
+            namespace, name = name.split('//')
+            cmd.extend(['-n', namespace])
 
         cmd.extend(['-o', 'json'])
 

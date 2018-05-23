@@ -958,6 +958,12 @@ class OpenShiftCLI(object):
         if selector is None and field_selector is None and name is not None:
             cmd.append(name)
 
+        # If resourse is a template it may be in 'template//name' format
+        if resource == 'template' and '//' in name:
+            
+            namespace, name = name.split('//')
+            cmd.extend(['-n', namespace])
+
         cmd.extend(['-o', 'json'])
 
         rval = self.openshift_cmd(cmd, output=True)

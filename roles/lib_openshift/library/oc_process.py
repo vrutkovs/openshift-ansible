@@ -1011,6 +1011,11 @@ class OpenShiftCLI(object):
         if field_selector is not None:
             cmd.append('--field-selector={}'.format(field_selector))
 
+        # If resourse is a template it may be in 'template//name' format
+        if resource == 'template' and '//' in name:
+            namespace, name = name.split('//')
+            cmd.extend(['-n', namespace])
+
         # Name cannot be used with selector or field_selector.
         if selector is None and field_selector is None and name is not None:
             cmd.append(name)
