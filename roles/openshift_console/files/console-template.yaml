@@ -20,29 +20,17 @@ parameters:
 - name: CONSOLE_HOSTNAME
   value: console.router.default.svc.cluster.local
   required: true
-- name: API_SERVER_URL
-  value: https://kubernetes.default.svc
-  required: true
 - name: NODE_SELECTOR
   value: "{}"
   required: true
 - name: REPLICA_COUNT
   value: "1"
   required: true
-- name: OAUTH_CLIENT_ID
-  # This cannot be changed. Only `openshift-console` is supported.
-  value: openshift-console
+- name: SERVER_CONFIG
   required: true
 - name: OAUTH_SECRET
   generate: expression
   from: "[a-zA-Z0-9]{32}"
-- name: LOGO_IMAGE_NAME
-  value: os-origin
-  description: Determines which OpenShift logo to use, 'os-origin', 'os-platform', or 'os-online'.
-  required: true
-- name: CLUSTER_NAME
-  value: openshift
-  required: true
 objects:
 
 # to create the web console server
@@ -81,44 +69,9 @@ objects:
         containers:
         - command:
           - /opt/bridge/bin/bridge
-          env:
-          - name: BRIDGE_K8S_MODE
-            value: in-cluster
-          - name: BRIDGE_K8S_AUTH
-            value: openshift
-          - name: BRIDGE_LISTEN
-            value: https://0.0.0.0:8443
-          - name: BRIDGE_TLS_CERT_FILE
-            value: /var/serving-cert/tls.crt
-          - name: BRIDGE_TLS_KEY_FILE
-            value: /var/serving-cert/tls.key
-          - name: BRIDGE_BASE_ADDRESS
-            valueFrom:
-              configMapKeyRef:
-                name: console-config
-                key: consoleBaseAddress
-          - name: BRIDGE_PUBLIC_DIR
-            value: /opt/bridge/static
-          - name: BRIDGE_USER_AUTH
-            value: openshift
-          - name: BRIDGE_USER_AUTH_OIDC_ISSUER_URL
-            value: ${API_SERVER_URL}
-          - name: BRIDGE_USER_AUTH_OIDC_CLIENT_ID
-            valueFrom:
-              secretKeyRef:
-                name: console-oauth-config
-                key: consoleClientID
-          - name: BRIDGE_USER_AUTH_OIDC_CLIENT_SECRET_FILE
-            value: /var/oauth-config/consoleSecret
-          - name: BRIDGE_TECTONIC_CLUSTER_NAME
-            valueFrom:
-              configMapKeyRef:
-                name: console-config
-                key: clusterName
-          - name: BRIDGE_LOGO_IMAGE_NAME
-            value: ${LOGO_IMAGE_NAME}
-          - name: BRIDGE_CA_FILE
-            value: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+          - "--public-dir=/opt/bridge/static"
+          - "--config=/var/console-config/console-config.yaml"
+          - "--ca-file=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
           image: ${IMAGE}
           imagePullPolicy: IfNotPresent
           livenessProbe:
@@ -150,6 +103,8 @@ objects:
           - mountPath: /var/oauth-config
             name: oauth-config
             readOnly: true
+          - mountPath: /var/console-config
+            name: console-config
         dnsPolicy: ClusterFirst
         replicas: "${{REPLICA_COUNT}}"
         restartPolicy: Always
@@ -157,15 +112,19 @@ objects:
         volumes:
         - name: serving-cert
           secret:
-            defaultMode: 400
+            defaultMode: 0440
             secretName: console-serving-cert
         - name: oauth-config
           secret:
-            defaultMode: 400
+            defaultMode: 0440
             secretName: console-oauth-config
+        - name: console-config
+          configMap:
+            defaultMode: 0440
+            name: console-config
         nodeSelector: "${{NODE_SELECTOR}}"
 
-# to create the config for the cluster console
+# to create the config for the console
 - apiVersion: v1
   kind: ConfigMap
   metadata:
@@ -174,9 +133,7 @@ objects:
     labels:
       app: openshift-console
   data:
-    consoleBaseAddress: https://${CONSOLE_HOSTNAME}/
-    clusterName: ${CLUSTER_NAME}
-    apiServerURL: ${API_SERVER_URL}
+    console-config.yaml: ${SERVER_CONFIG}
 
 # to store the OAauth client ID and secret
 - apiVersion: v1
@@ -187,8 +144,8 @@ objects:
     labels:
       app: openshift-console
   stringData:
-    consoleClientID: ${OAUTH_CLIENT_ID}
-    consoleSecret: ${OAUTH_SECRET}
+    clientID: ${OAUTH_CLIENT_ID}
+    clientSecret: ${OAUTH_SECRET}
 
 # to be able to assign powers to the process
 - apiVersion: v1
@@ -237,11 +194,11 @@ objects:
       insecureEdgeTerminationPolicy: Redirect
       termination: reencrypt
 
-# to be able to login to OpenShift
+# to let users log in
 - apiVersion: oauth.openshift.io/v1
   kind: OAuthClient
   metadata:
-    name: ${OAUTH_CLIENT_ID}
+    name: openshift-console
   grantMethod: auto
   secret: ${OAUTH_SECRET}
   redirectURIs:

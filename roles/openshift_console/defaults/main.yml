@@ -2,9 +2,11 @@
 openshift_console_nodeselector: {"node-role.kubernetes.io/master":"true"}
 
 __console_template_file: "console-template.yaml"
+__console_config_file: "console-config.yaml"
 
 # TODO: This will need to be updated. Currently the tags don't match OpenShift versions, and image names don't follow the OpenShift pattern.
-openshift_console_image_name: "quay.io/coreos/tectonic-console:1b77d7c6353c6c66b52e7a1831872f5841570a08"
+# Requires https://github.com/openshift/console/pull/65
+openshift_console_image_name: "quay.io/coreos/tectonic-console:pr_65_build_299"
 
 # TODO: Update this value when remove the sticky session requirement. It has to be 1 for now.
 openshift_console_replica_count: 1
