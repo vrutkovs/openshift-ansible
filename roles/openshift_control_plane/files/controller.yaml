@@ -36,6 +36,8 @@ spec:
         scheme: HTTPS
         port: 8444
         path: healthz
+      initialDelaySeconds: 45
+      timeoutSeconds: 10
   # second controllers container would be started here
   # scheduler container started here
   volumes:
