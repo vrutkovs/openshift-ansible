@@ -193,7 +193,7 @@
   ignore_errors: yes
 
 # Capture debug output here to simplify triage
-- when: control_plane_health.stdout != 'ok'
+- when: control_plane_health.results.returncode != 0
   block:
   - name: Check status in the kube-system namespace
     command: >
