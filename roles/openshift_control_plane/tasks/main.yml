@@ -172,18 +172,23 @@
   - fail:
       msg: Node start failed.
 
-- name: Verify that the control plane is running
-  command: >
-    curl -k {{ openshift.master.api_url }}/healthz/ready
-  args:
-    # Disables the following warning:
-    # Consider using get_url or uri module rather than running curl
-    warn: no
+- name: Wait for all control plane pods to be ready
+  oc_obj:
+    state: list
+    kind: pod
+    name: "master-{{ item }}-{{ openshift.node.nodename | lower }}"
+    namespace: kube-system
   register: control_plane_health
-  until: control_plane_health.stdout == 'ok'
+  until:
+    - control_plane_health.results.returncode == 0
+    - control_plane_health.results.results[0].status.conditions | selectattr('type', 'match', '^Ready$') | map(attribute='status') | join | bool == True
+  # Give the node two minutes to come back online.
   retries: 60
   delay: 5
-  changed_when: false
+  with_items:
+    - api
+    - etcd
+    - controllers
   # Ignore errors so we can log troubleshooting info on failures.
   ignore_errors: yes
 
