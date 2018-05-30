@@ -8,8 +8,8 @@ __console_config_file: "console-config.yaml"
 # Requires https://github.com/openshift/console/pull/65
 openshift_console_image_name: "quay.io/coreos/tectonic-console:pr_65_build_299"
 
-# TODO: Update this value when remove the sticky session requirement. It has to be 1 for now.
-openshift_console_replica_count: 1
+# Default the replica count to the number of masters.
+openshift_console_replica_count: "{{ groups.oo_masters_to_config | length }}"
 
 openshift_console_hostname: "console.{{openshift_master_default_subdomain}}"
 

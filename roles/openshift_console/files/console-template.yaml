@@ -34,7 +34,7 @@ parameters:
 objects:
 
 # to create the web console server
-- apiVersion: apps/v1beta1
+- apiVersion: apps/v1
   kind: Deployment
   metadata:
     name: console
@@ -47,9 +47,8 @@ objects:
       matchLabels:
         app: openshift-console
         component: ui
-    # use a recreate strategy for now since we don't have sticky sessions
     strategy:
-      type: Recreate
+      type: RollingUpdate
     template:
       metadata:
         labels:
@@ -57,6 +56,10 @@ objects:
           component: ui
         name: console
       spec:
+        selector:
+          matchLabels:
+            app: openshift-console
+            component: ui
         affinity:
           podAntiAffinity:
             preferredDuringSchedulingIgnoredDuringExecution:

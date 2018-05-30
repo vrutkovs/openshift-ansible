@@ -14,7 +14,7 @@
 
 - name: Copy admin client config
   command: >
-    cp {{ openshift.common.config_base }}/master//admin.kubeconfig {{ mktemp.stdout }}/admin.kubeconfig
+    cp {{ openshift.common.config_base }}/master/admin.kubeconfig {{ mktemp.stdout }}/admin.kubeconfig
   changed_when: false
 
 - name: Copy console templates to temp directory
