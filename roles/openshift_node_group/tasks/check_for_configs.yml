@@ -1,4 +1,17 @@
 ---
+- name: "Check that {{ openshift_node_group_namespace }} has node configs"
+  oc_obj:
+    namespace: "{{ openshift_node_group_namespace }}"
+    kind: configmap
+    state: list
+  register: configout
+
+- fail:
+    msg: >
+      No configmaps found in {{ openshift_node_group_namespace }}.
+      Please refer to 3.10 upgrade docs to find out why these are needed during upgrade.
+  when: configout.results.results == [{}]
+
 - include_tasks: check_for_config.yml
   vars:
     l_openshift_node_group_name: "{{ node_group.name }}"
