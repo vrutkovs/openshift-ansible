@@ -77,16 +77,17 @@ objects:
           - "--ca-file=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
           image: ${IMAGE}
           imagePullPolicy: IfNotPresent
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8443
+              scheme: HTTPS
           livenessProbe:
-            failureThreshold: 3
             httpGet:
               path: /health
               port: 8443
               scheme: HTTPS
             initialDelaySeconds: 30
-            periodSeconds: 10
-            successThreshold: 1
-            timeoutSeconds: 1
           name: console
           ports:
           - containerPort: 8443

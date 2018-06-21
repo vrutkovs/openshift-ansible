@@ -6,7 +6,7 @@ __console_config_file: "console-config.yaml"
 
 # TODO: This will need to be updated. Currently the tags don't match OpenShift versions, and image names don't follow the OpenShift pattern.
 # Requires https://github.com/openshift/console/pull/65
-openshift_console_image_name: "quay.io/coreos/tectonic-console:pr_65_build_299"
+openshift_console_image_name: "quay.io/coreos/tectonic-console:pr_65_build_386"
 
 # Default the replica count to the number of masters.
 openshift_console_replica_count: "{{ groups.oo_masters_to_config | length }}"
