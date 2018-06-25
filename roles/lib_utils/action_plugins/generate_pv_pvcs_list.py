@@ -5,6 +5,14 @@ Ansible action plugin to generate pv and pvc dictionaries lists
 from ansible.plugins.action import ActionBase
 from ansible import errors
 
+def to_bool(var_to_check):
+    """Determine a boolean value given the multiple
+       ways bools can be specified in ansible."""
+    # http://yaml.org/type/bool.html
+    yes_list = (True, 1, "True", "1", "true", "TRUE",
+                "Yes", "yes", "Y", "y", "YES",
+                "on", "ON", "On")
+    return var_to_check in yes_list
 
 class ActionModule(ActionBase):
     """Action plugin to execute health checks."""
@@ -116,7 +124,7 @@ class ActionModule(ActionBase):
         if kind:
             kind = self._templar.template(kind)
             create_pv = self.task_vars.get(str(varname) + '_create_pv')
-            if create_pv and self._templar.template(create_pv):
+            if create_pv and to_bool(self._templar.template(create_pv)):
                 if kind == 'nfs':
                     return self.build_pv_nfs(varname=varname)
 
@@ -147,7 +155,7 @@ class ActionModule(ActionBase):
                 create_pvc = self.task_vars.get(str(varname) + '_create_pvc')
                 if create_pvc:
                     create_pvc = self._templar.template(create_pvc)
-                    if kind != 'object' and create_pv and create_pvc:
+                    if kind != 'object' and to_bool(create_pv) and to_bool(create_pvc):
                         volume, size, _, annotations, access_modes = self.build_common(varname=varname)
                         storageclass = self.task_vars.get(str(varname) + '_storageclass')
                         if storageclass:
