@@ -6,6 +6,7 @@ __console_config_file: "console-config.yaml"
 
 # TODO: This will need to be updated. Currently the tags don't match OpenShift versions, and image names don't follow the OpenShift pattern.
 # Requires https://github.com/openshift/console/pull/65
+# openshift_console_image_name: "{{ l_osm_registry_url | regex_replace('${component}' | regex_escape, 'console') }}"
 openshift_console_image_name: "quay.io/coreos/tectonic-console:pr_65_build_386"
 
 # Default the replica count to the number of masters.
@@ -13,7 +14,13 @@ openshift_console_replica_count: "{{ groups.oo_masters_to_config | length }}"
 
 openshift_console_hostname: "console.{{openshift_master_default_subdomain}}"
 
+# The logo to use in the masthead.
 l_openshift_logo_image_names_dict:
-  origin: 'os-origin'
-  openshift-enterprise: 'os-platform'
+  origin: 'origin'
+  openshift-enterprise: 'ocp'
 openshift_console_logo_image_name: "{{ l_openshift_logo_image_names_dict[openshift_deployment_type] }}"
+
+l_openshift_documentation_url_dict:
+  origin: 'https://docs.openshift.org/3.11/'
+  openshift-enterprise: 'https://docs.openshift.com/container-platform/3.11/'
+openshift_console_documentation_base_url: "{{ l_openshift_documentation_url_dict[openshift_deployment_type] }}"

@@ -51,12 +51,14 @@
     - key: clusterInfo#consoleBaseAddress
       # TODO: Support console base path
       value: "https://{{ openshift_console_hostname }}"
-    - key: clusterInfo#logoutPublicURL
+    - key: clusterInfo#logoutRedirect
       value: "{{ openshift.master.logout_url | default('') }}"
     - key: auth#issuerURL
       value: "{{ openshift.master.public_api_url }}"
-    - key: customization#imageLogoName
+    - key: customization#logoImageName
       value: "{{ openshift_console_logo_image_name }}"
+    - key: customization#documentationBaseURL
+      value: "{{ openshift_console_documentation_base_url }}"
     separator: '#'
     state: present
   when: existing_config_map_data['console-config.yaml'] is not defined
