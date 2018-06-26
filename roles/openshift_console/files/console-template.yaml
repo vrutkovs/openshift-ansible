@@ -49,6 +49,7 @@ objects:
         component: ui
     strategy:
       type: RollingUpdate
+    progressDeadlineSeconds: 600
     template:
       metadata:
         labels:
