@@ -49,8 +49,9 @@
     src: "{{ mktemp.stdout }}/{{ __console_config_file }}"
     edits:
     - key: clusterInfo#consoleBaseAddress
-      # TODO: Support console base path
       value: "https://{{ openshift_console_hostname }}"
+    - key: clusterInfo#consoleBasePath
+      value: "{ openshift_console_base_path | default('') }}"
     - key: clusterInfo#logoutRedirect
       value: "{{ openshift.master.logout_url | default('') }}"
     - key: auth#issuerURL
