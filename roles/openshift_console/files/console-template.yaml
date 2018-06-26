@@ -75,7 +75,6 @@ objects:
           - /opt/bridge/bin/bridge
           - "--public-dir=/opt/bridge/static"
           - "--config=/var/console-config/console-config.yaml"
-          - "--ca-file=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
           image: ${IMAGE}
           imagePullPolicy: IfNotPresent
           readinessProbe:

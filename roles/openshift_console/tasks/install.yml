@@ -51,10 +51,12 @@
       value: "https://{{ openshift_console_hostname }}"
     - key: clusterInfo#consoleBasePath
       value: "{{ openshift_console_base_path | default('') }}"
-    - key: clusterInfo#logoutRedirect
-      value: "{{ openshift.master.logout_url | default('') }}"
+    - key: clusterInfo#caFile
+      value: "{{ openshift_console_ca_file }}"
     - key: auth#issuerURL
       value: "{{ openshift.master.public_api_url }}"
+    - key: auth#logoutRedirect
+      value: "{{ openshift.master.logout_url | default('') }}"
     - key: customization#logoImageName
       value: "{{ openshift_console_logo_image_name }}"
     - key: customization#documentationBaseURL
