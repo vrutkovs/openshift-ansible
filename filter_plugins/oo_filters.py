@@ -39,6 +39,15 @@ try:
 except ImportError:
     pass
 
+# Ansible 2.5+ stores hostvars as ansible.vars.hostvars.HostVarsVars, 
+# which cannot be converted cleanly
+HOSTVARS_CLASS = dict
+try:
+    from ansible.vars.hostvars import HostVarsVars
+    HOSTVARS_CLASS = HostVarsVars
+except ImportError:
+    pass
+
 
 def oo_pdb(arg):
     """ This pops you into a pdb instance where arg is the data passed in
@@ -87,8 +96,8 @@ def oo_merge_dicts(first_dict, second_dict):
             second_dict={'b': 3, 'c': 4}
             returns {'a': 1, 'b': 3, 'c': 4}
     """
-    if not isinstance(first_dict, dict) or not isinstance(second_dict, dict):
-        raise errors.AnsibleFilterError("|failed expects to merge two dicts")
+    if not isinstance(first_dict, HOSTVARS_CLASS) or not isinstance(second_dict, HOSTVARS_CLASS):
+        raise errors.AnsibleFilterError("|failed expects to merge two {}s".format(HOSTVARS_CLASS))
     merged = first_dict.copy()
     merged.update(second_dict)
     return merged
@@ -749,8 +758,9 @@ def oo_openshift_env(hostvars):
                         'theyre_taking_the_hobbits_to': 'isengard'}
             returns  = {'openshift_fact': 42}
     '''
-    if not issubclass(type(hostvars), dict):
-        raise errors.AnsibleFilterError("|failed expects hostvars is a dict")
+    expected_class = dict
+    if not issubclass(type(hostvars), HOSTVARS_CLASS):
+        raise errors.AnsibleFilterError("|failed expects hostvars is a {}".format(HOSTVARS_CLASS))
 
     facts = {}
     regex = re.compile('^openshift_.*')
