@@ -25,14 +25,14 @@
     when: inventory_hostname not in groups['oo_nodes_to_config']
 
 # We only need to run this if etcd is being installed on a standalone host;
-# If etcd is part of master or node group, there's no need to
+# If etcd is part of master group, there's no need to
 # re-run prerequisites
 - import_playbook: ../prerequisites.yml
   vars:
     l_etcd_scale_up_crt_hosts: "all:!all"
     l_scale_up_hosts: "oo_new_etcd_to_config"
     l_base_packages_hosts: "oo_new_etcd_to_config"
-    l_init_fact_hosts: "oo_masters_to_config:oo_etcd_to_config:oo_lb_to_config:oo_new_etcd_to_config"
+    l_init_fact_hosts: "oo_masters_to_config:oo_nodes_to_config:oo_etcd_to_config:oo_lb_to_config:oo_new_etcd_to_config"
     l_sanity_check_hosts: "{{ groups['oo_new_etcd_to_config'] | union(groups['oo_masters_to_config']) | union(groups['oo_etcd_to_config']) }}"
   when:
   - inventory_hostname not in groups['oo_masters']
