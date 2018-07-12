@@ -13,17 +13,6 @@
     when: >
       inventory_hostname in (groups['new_masters'] | default([]))
 
-- name: Ensure there are new_masters and new_nodes
-  hosts: oo_etcd_to_config
-  connection: local
-  gather_facts: no
-  tasks:
-  - fail:
-      # new_etcd must be part of new_nodes as well;
-      msg: >
-        Each host in new_etcd must also appear in new_nodes
-    when: inventory_hostname not in groups['oo_nodes_to_config']
-
 # We only need to run this if etcd is being installed on a standalone host;
 # If etcd is part of master group, there's no need to
 # re-run prerequisites
