@@ -1,15 +1,22 @@
 ---
-
+#failed_when here will not let this task fail if service doesn't exist
 - name: Ensure firewalld service is not enabled
   systemd:
     name: firewalld
     state: stopped
-    enabled: no
-    masked: yes
   register: task_result
   failed_when:
-    - task_result is failed
-    - ('could not' not in task_result.msg|lower)
+  - task_result is failed
+  - ('could not' not in task_result.msg|lower)
+
+# These tasks are split in two, as changing masked and enabled status
+# would mutate `changed` field, so it needs to be performed in two tasks
+- name: Mask and disable firewalld service
+  systemd:
+    name: firewalld
+    enabled: no
+    masked: yes
+  when: task_result is succeeded
 
 - name: Wait 10 seconds after disabling firewalld
   pause:
