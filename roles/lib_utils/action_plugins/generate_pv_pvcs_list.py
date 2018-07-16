@@ -162,6 +162,8 @@ class ActionModule(ActionBase):
                             storageclass = self._templar.template(storageclass)
                         elif kind == 'nfs':
                             storageclass = ''
+                        elif kind == 'glusterfs':
+                            storageclass = 'glusterfs-storage'
                         if kind == 'dynamic':
                             storageclass = None
                         return dict(
