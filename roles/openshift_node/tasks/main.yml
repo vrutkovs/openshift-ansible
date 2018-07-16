@@ -12,20 +12,6 @@
 - name: setup firewall
   import_tasks: firewall.yml
 
-- name: Update journald config
-  import_tasks: journald.yml
-
-#### Disable SWAP #####
-# https://docs.openshift.com/container-platform/3.4/admin_guide/overcommit.html#disabling-swap-memory
-# swapoff is a custom module in lib_utils that comments out swap entries in
-# /etc/fstab and runs swapoff -a, if necessary.
-- name: Disable swap
-  swapoff: {}
-  when: openshift_disable_swap | default(true) | bool
-
-- name: include node installer
-  import_tasks: install.yml
-
 - name: Restart cri-o
   systemd:
     name: cri-o
@@ -42,6 +28,23 @@
     name: NetworkManager
     enabled: yes
     state: restarted
+
+- name: include node installer
+  import_tasks: install.yml
+
+- name: Start node image prepull
+  import_tasks: prepull.yml
+
+- name: Update journald config
+  import_tasks: journald.yml
+
+#### Disable SWAP #####
+# https://docs.openshift.com/container-platform/3.4/admin_guide/overcommit.html#disabling-swap-memory
+# swapoff is a custom module in lib_utils that comments out swap entries in
+# /etc/fstab and runs swapoff -a, if necessary.
+- name: Disable swap
+  swapoff: {}
+  when: openshift_disable_swap | default(true) | bool
 
 # The atomic-openshift-node service will set this parameter on
 # startup, but if the network service is restarted this setting is
