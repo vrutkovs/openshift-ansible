@@ -6,6 +6,9 @@
     - openshift_deployment_type == 'openshift-enterprise'
     - not openshift_use_crio | bool
 
+- name: Start node image prepull                                                
+  import_tasks: prepull.yml  
+
 - import_tasks: dnsmasq_install.yml
 - import_tasks: dnsmasq.yml
 
@@ -31,9 +34,6 @@
 
 - name: include node installer
   import_tasks: install.yml
-
-- name: Start node image prepull
-  import_tasks: prepull.yml
 
 - name: Update journald config
   import_tasks: journald.yml
