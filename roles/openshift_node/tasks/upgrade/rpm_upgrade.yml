@@ -21,7 +21,6 @@
     - result.stdout is search(".*No package .* available.*") or result is failed
   vars:
     openshift_node_upgrade_rpm_list:
-      - "{{ openshift_service_type }}{{ openshift_pkg_version }}"
       - "{{ openshift_service_type }}-hyperkube{{ openshift_pkg_version }}"
       - "{{ openshift_service_type }}-node{{ openshift_pkg_version }}"
       - "{{ openshift_service_type }}-clients{{ openshift_pkg_version }}"
