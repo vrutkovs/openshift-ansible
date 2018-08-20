@@ -10,14 +10,7 @@
     tasks_from: registry_auth.yml
   when: oreg_auth_user is defined
 
-- name: Verify containers are available for upgrade
-  command: >
-    docker pull {{ openshift_cli_image }}
-  register: pull_result
-  changed_when: "'Downloaded newer image' in pull_result.stdout"
-  when: openshift_is_containerized | bool
-
-- when: not openshift_is_containerized | bool
+- when: not openshift_is_atomic | bool
   block:
   - name: Check latest available OpenShift RPM version
     repoquery:
@@ -45,9 +38,9 @@
     when:
     - (openshift_pkg_version | default('-0.0', True)).split('-')[1] is version(openshift_upgrade_target, '<')
 
-- name: Fail when openshift version does not meet minimum requirement for Origin upgrade
-  fail:
-    msg: "This upgrade playbook must be run against OpenShift {{ openshift_upgrade_min }} or later"
-  when:
-  - openshift_deployment_type == 'origin'
-  - openshift_current_version is version(openshift_upgrade_min,'<')
+  - name: Fail when openshift version does not meet minimum requirement for Origin upgrade
+    fail:
+      msg: "This upgrade playbook must be run against OpenShift {{ openshift_upgrade_min }} or later"
+    when:
+    - openshift_deployment_type == 'origin'
+    - openshift_current_version is version(openshift_upgrade_min,'<')
