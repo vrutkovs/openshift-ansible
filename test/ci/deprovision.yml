@@ -1,0 +1,25 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Stop VMs
+      local_action:
+        ec2
+        instance_ids="{{ hostvars[item]['aws_id'] }}"
+        region="{{ hostvars[item]['aws_region'] }}"
+        state=stopped
+      with_items: "{{ groups['all'] }}"
+      failed_when: false
+
+    - name: Tag VMs for termination
+      local_action: >
+        ec2_tag
+        resource="{{ hostvars[item]['aws_id'] }}"
+        region="{{ hostvars[item]['aws_region'] }}"
+        state=present
+      with_items: "{{ groups['all'] }}"
+      failed_when: false
+      args:
+        tags:
+          Name: "{{ item }}-terminate"

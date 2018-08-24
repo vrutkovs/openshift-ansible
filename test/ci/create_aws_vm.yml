@@ -1,0 +1,57 @@
+---
+- name: Prepare aws_instance tag
+  set_fact:
+    aws_instance_tags: |
+      {
+        "kubernetes.io/cluster/{{ aws_cluster_id }}": "true",
+      }
+
+- name: Create a VM
+  ec2:
+    region: "{{ aws_region }}"
+    key_name: "{{ aws_key }}"
+    instance_type: "{{ outer_item.aws_flavor }}"
+    image: "{{ outer_item.aws_image | default(aws_image) }}"
+    wait: yes
+    group: "{{ outer_item.aws_security_group }}"
+    count: 1
+    vpc_subnet_id: "{{ aws_subnet }}"
+    assign_public_ip: yes
+    instance_tags: "{{ aws_instance_tags |
+      combine({'Name': outer_item.name_template + '-' + item }) }}"
+  register: ec2
+  with_sequence: start=1 end={{ outer_item.amount }}
+
+- name: Attach the volume for gluster
+  ec2_vol:
+    instance: "{{ item.instances.0.id }}"
+    name: "{{ item.instances.0.tags.Name }}-volume"
+    device_name: /dev/sdc
+    volume_size: 50
+    delete_on_termination: yes
+    region: "{{ aws_region }}"
+  when: "'glusterfs' in outer_item.groups"
+  with_items: "{{ ec2.results }}"
+
+- name: Attach the volume for Atomic
+  ec2_vol:
+    instance: "{{ item.instances.0.id }}"
+    name: "{{ item.instances.0.tags.Name }}-docker-volume"
+    device_name: /dev/sdb
+    volume_size: 50
+    delete_on_termination: yes
+    region: "{{ aws_region }}"
+  when: is_atomic
+  with_items: "{{ ec2.results }}"
+
+- name: Add machine to inventory
+  add_host:
+    name: "{{ item.instances.0.tags.Name }}"
+    ansible_host: "{{ item.instances.0.dns_name }}"
+    ansible_user: "{{ item.aws_user | default(aws_user)}}"
+    groups: "{{ outer_item.groups }}"
+    aws_id: "{{ item.instances.0.id }}"
+    aws_region: "{{ aws_region }}"
+    aws_ip: "{{ item.instances.0.public_ip }}"
+    node_group: "{{ outer_item.node_group }}"
+  with_items: "{{ ec2.results }}"

@@ -1,14 +1,12 @@
-This directory contains scripts and other files that are executed by our
-CI integration tests.
+* Copy `test/ci/vars.yml.sample` to `test/ci/inventory/vars.yml`
+* Adjust it your liking
+* Provision instances via `ansible-playbook -vv -i test/ci/inventory/ test/ci/launch.yml -e @test/ci/inventory/vars.yml`
+  This would place inventory file in `test/ci/inventory/hosts`
 
-CI should call a script.  The only arguments that each script should accept
-are:
+* Use created inventory to run prerequisites and deploy:
+  ```
+  ansible-playbook -vv -i test/ci/inventory/hosts playbooks/prerequisites.yml
+  ansible-playbook -vv -i test/ci/inventory/hosts playbooks/deploy_cluster.yml
+  ```
 
-1) Path to openshift-ansible/playbooks
-2) Inventory path.
-3) Extra vars path.
-
-Ideally, inventory path and extra vars should live somewhere in this
-subdirectory instead of the CI's source.
-
-Extravars should typically be unnecessary.
+* Once the setup is complete run `ansible-playbook -vv -i test/ci/inventory/ test/ci/deprovision.yml`

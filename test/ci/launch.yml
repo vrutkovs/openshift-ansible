@@ -1,0 +1,50 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: list available AMIs
+      ec2_ami_find:
+        region: '{{ aws_region }}'
+        ami_tags:
+          operating_system: '{{ operating_system }}'
+          image_stage: 'base'
+          ready: 'yes'
+        sort: 'creationDate'
+        sort_order: ascending
+        no_result_action: fail
+      register: ami_facts
+
+    - name: choose appropriate AMIs for use
+      set_fact:
+        origin_ci_aws_ami_id_candidate: '{{ item.ami_id }}'
+      with_items: '{{ ami_facts.results }}'
+      when: "'qe' not in item.tags"
+
+    - name: determine which AMI to use
+      set_fact:
+        aws_image: '{{ origin_ci_aws_ami_id_candidate }}'
+      when: aws_image is not defined
+
+    - include_tasks: create_aws_vm.yml
+      register: aws
+      with_items: "{{ vms }}"
+      loop_control:
+        loop_var: outer_item
+
+    - name: write the inventory
+      template:
+        src: ./template-inventory.j2
+        dest: "inventory/hosts"
+
+- hosts: all
+  gather_facts: no
+  become: true
+  tasks:
+    - wait_for_connection: {}
+    - setup: {}
+    - name: Refresh inventory to ensure new instaces exist in inventory
+      meta: refresh_inventory
+
+- import_playbook: ../../playbooks/prerequisites.yml
+- import_playbook: ../../playbooks/deploy_cluster.yml
