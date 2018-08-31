@@ -20,6 +20,11 @@
         aws_image: "{{ ami_facts.images[-1].image_id }}"
       when: aws_image is not defined
 
+    - name: determine which AMI to use
+      set_fact:
+        aws_image: "{{ ami_facts.images[-1].image_id }}"
+      when: aws_image is not defined
+
     - name: Create EC2 instance
       ec2:
         region: "{{ aws_region }}"
@@ -40,7 +45,7 @@
           {
             "kubernetes.io/cluster/{{ aws_cluster_id }}": "true",
             "Name": "{{ item.name }}",
-            "ansible-groups": "{{ item.groups | join(',') }}",
+            "ansible-groups": "{{ item.ansible_groups | join(',') }}",
             "ansible-node-group": "{{ item.node_group }}",
           }
 

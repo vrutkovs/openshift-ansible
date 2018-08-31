@@ -17,7 +17,7 @@ aws_ami_tags:
 
 aws_instances:
 - name: "{{ vm_prefix }}-master"
-  groups:
+  ansible_groups:
     - masters
     - etcd
     - nodes
