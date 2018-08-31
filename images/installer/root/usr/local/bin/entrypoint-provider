@@ -11,7 +11,7 @@
 #
 # Currently GCP and Azure are supported.
 
-set -euo pipefail
+set -euxo pipefail
 
 WORK=$(pwd)
 FILES="${WORK}/inventory/dynamic/injected"
