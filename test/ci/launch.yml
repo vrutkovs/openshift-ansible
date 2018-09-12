@@ -25,6 +25,12 @@
         aws_image: "{{ ami_facts.images[-1].image_id }}"
       when: aws_image is not defined
 
+    - ec2_group_facts:
+        region: "{{ aws_region }}"
+
+    - fail:
+        msg: "foo"
+
     - name: Create EC2 instance
       ec2:
         region: "{{ aws_region }}"
