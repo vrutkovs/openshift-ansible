@@ -19,7 +19,7 @@
       ec2:
         instance_ids: "{{ item.instance_id }}"
         region: "{{ aws_region }}"
-        state: stopped
+        state: "{{ aws_terminate | ternary('absent', 'stopped') }}"
         wait: no
       with_items: "{{ ec2.instances }}"
       ignore_errors: true
@@ -30,5 +30,7 @@
         region: "{{ aws_region }}"
         tags:
           Name: "{{ item.tags.Name }}-terminate"
-      when: "'-terminate' not in item.tags.Name"
+      when:
+        - aws_terminate | bool
+        - "'-terminate' not in item.tags.Name"
       with_items: "{{ ec2.instances }}"

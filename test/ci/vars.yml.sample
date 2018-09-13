@@ -1,5 +1,7 @@
 ---
 vm_prefix: "ci_test"
+# Terminate machines when set to true, otherwise stop and append '-terminate' to the name
+aws_terminate: false
 
 type: aws
 aws_user: "ec2-user"
