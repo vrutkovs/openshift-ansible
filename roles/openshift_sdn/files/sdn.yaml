@@ -38,7 +38,7 @@ spec:
       # It relies on an up to date node-config.yaml being present.
       - name: sdn
         image: " "
-        command: 
+        command:
         - /bin/bash
         - -c
         - |
@@ -81,9 +81,16 @@ spec:
           rm -Rf /etc/cni/net.d/80-openshift-network.conf
           cp -Rf /opt/cni/bin/* /host/opt/cni/bin/
 
-          if [[ -f /etc/sysconfig/origin-node ]]; then
+          sysconfig=/etc/sysconfig/origin-node
+          if [[ -f /etc/sysconfig/atomic-openshift-node ]]; then
+            sysconfig=/etc/sysconfig/atomic-openshift-node
+          elif [[ -f /etc/sysconfig/origin-node ]]; then
+            sysconfig=/etc/sysconfig/origin-node
+          fi
+
+          if [[ -f $sysconfig ]]; then
             set -o allexport
-            source /etc/sysconfig/origin-node
+            source $sysconfig
           fi
 
           # use either the bootstrapped node kubeconfig or the static configuration
@@ -101,11 +108,17 @@ spec:
           oc config "--config=${file}" view --flatten > /tmp/kubeconfig
           oc config --config=/tmp/kubeconfig set-credentials sa "--token=$( cat /var/run/secrets/kubernetes.io/serviceaccount/token )"
           oc config --config=/tmp/kubeconfig set-context "$( oc config --config=/tmp/kubeconfig current-context )" --user=sa
+          hostname_override=$(sed -nE 's|^HOSTNAME_OVERRIDE=([^#].+)|\1|p' "${sysconfig}" | head -1)
+          if [[ ! -z "${hostname_override}" ]]; then
+            flags="--hostname-override=\"$hostname_override\""
+          else
+            flags=""
+          fi
           # Launch the network process
           if which openshift-sdn; then
-            exec openshift-sdn --config=/etc/origin/node/node-config.yaml --kubeconfig=/tmp/kubeconfig --loglevel=${DEBUG_LOGLEVEL:-2}
+            exec openshift-sdn --config=/etc/origin/node/node-config.yaml --kubeconfig=/tmp/kubeconfig --loglevel=${DEBUG_LOGLEVEL:-2} ${flags:-}
           fi
-          exec openshift start network --config=/etc/origin/node/node-config.yaml --kubeconfig=/tmp/kubeconfig --loglevel=${DEBUG_LOGLEVEL:-2}
+          exec openshift start network --config=/etc/origin/node/node-config.yaml --kubeconfig=/tmp/kubeconfig --loglevel=${DEBUG_LOGLEVEL:-2} ${flags:-}
 
         securityContext:
           runAsUser: 0
