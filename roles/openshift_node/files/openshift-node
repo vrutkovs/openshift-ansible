@@ -15,4 +15,15 @@ if [[ -f /etc/origin/node/node-config.yaml ]]; then
   config=/etc/origin/node/node-config.yaml
 fi
 flags=$( /usr/bin/openshift-node-config "--config=${config}" )
+
+sysconfig=/etc/sysconfig/origin-node
+if [[ -f /etc/sysconfig/atomic-openshift-node ]]; then
+  sysconfig=/etc/sysconfig/atomic-openshift-node
+elif [[ -f /etc/sysconfig/origin-node ]]; then
+  sysconfig=/etc/sysconfig/origin-node
+fi
+hostname_override=$(sed -nE 's|^HOSTNAME_OVERRIDE=([^#].+)|\1|p' "${sysconfig}" | head -1)
+if [[ ! -z "${hostname_override}" ]]; then
+  flags="$flags --hostname-override=\"$hostname_override\""
+fi
 eval "exec /usr/bin/hyperkube kubelet --v=${DEBUG_LOGLEVEL:-2} ${flags}"

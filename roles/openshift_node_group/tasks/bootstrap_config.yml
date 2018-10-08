@@ -14,6 +14,12 @@
     dest: "/etc/sysconfig/{{ openshift_service_type }}-node"
     line: "BOOTSTRAP_CONFIG_NAME={{ openshift_node_group_name }}"
     regexp: "^BOOTSTRAP_CONFIG_NAME=.*"
+- name: Set custom hostname override name
+  lineinfile:
+    dest: "/etc/sysconfig/{{ openshift_service_type }}-node"
+    line: "HOSTNAME_OVERRIDE={{ openshift_kubelet_name_override }}"
+    regexp: "^HOSTNAME_OVERRIDE=.*"
+  when: openshift_kubelet_name_override is defined
 
 - import_role:
     name: openshift_node
