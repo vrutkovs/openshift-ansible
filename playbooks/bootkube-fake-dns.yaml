@@ -12,10 +12,10 @@
         state: latest
     - copy:
         content: |
-          {{ ansible_default_ipv4.address }} vrutkovs-api.testing.tt
+          {{ ansible_default_ipv4.address }} {{ aws_cluster_id }}-api.{{ aws_basedomain }}
           {% for master in groups['masters'] %}
-          {{ hostvars[master]['ansible_default_ipv4']['address'] }} vrutkovs-api.testing.tt
-          {{ hostvars[master]['ansible_default_ipv4']['address'] }} vrutkovs-etcd-{{ loop.index - 1 }}.testing.tt
+          {{ hostvars[master]['ansible_default_ipv4']['address'] }} {{ aws_cluster_id }}-api.{{ aws_basedomain }}
+          {{ hostvars[master]['ansible_default_ipv4']['address'] }} {{ aws_cluster_id }}-etcd-{{ loop.index - 1 }}.{{ aws_basedomain }}
           {% endfor %}
         dest: /etc/hosts.openshift
     - file:
