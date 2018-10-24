@@ -13,6 +13,13 @@
     l_install_base_packages: True
     l_repo_hosts: "all:!all"
 
+# Setup openshift_additional_repos
+- hosts: nodes
+  tasks:
+  - name: initialize openshift repos
+    import_role:
+      name: openshift_repos
+
 # TODO: proper firewalld setup
 # 49500 on bootstrap; 2379, 6443, 10250 on masters, 10250 on workers
 
