@@ -47,6 +47,7 @@
             "Name": "{{ item.name }}",
             "ansible-groups": "{{ item.ansible_groups | join(',') }}",
             "ansible-node-group": "{{ item.node_group }}",
+            "ansible-ignition-file": "{{ item.ignition_file | default('') }}",
             "expirationDate": "{{ item.aws_expiration_date | default(aws_expiration_date) }}"
           }
 
@@ -60,6 +61,7 @@
         aws_ip: "{{ item.instances.0.public_ip }}"
         aws_id: "{{ item.instances.0.id }}"
         openshift_node_group_name: "{{ item.instances.0.tags['ansible-node-group'] }}"
+        ignition_file: "{{ item.instances.0.tags['ansible-ignition-file'] }}"
       with_items: "{{ ec2.results }}"
 
     - name: write the inventory

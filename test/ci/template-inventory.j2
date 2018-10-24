@@ -16,6 +16,9 @@ openshift_master_default_subdomain="{{ hostvars[groups[('lb' in groups) | ternar
 [{{group}}]
 {% for entry in groups[group] %}
 {% set addon_opts = "" %}
+{% if group == "bootstrap" %}
+{% set addon_opts = addon_opts + " ignition_file='" + hostvars[entry]['ignition_file'] + "'" %}
+{% endif %}
 {% if group == "nodes" %}
 {% set addon_opts = addon_opts + " openshift_node_group_name='" + hostvars[entry]['openshift_node_group_name'] + "'" %}
 {% endif %}
