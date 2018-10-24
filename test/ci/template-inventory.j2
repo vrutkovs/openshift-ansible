@@ -2,6 +2,11 @@
 ansible_python_interpreter="{{ python }}"
 ansible_user="{{ aws_user }}"
 aws_region="{{ aws_region }}"
+openshift_cloudprovider_kind=aws
+openshift_cloudprovider_aws_access_key="{{ '{{' }} lookup('env','AWS_ACCESS_KEY') {{ '}}' }}"
+openshift_cloudprovider_aws_secret_key="{{ '{{' }} lookup('env','AWS_SECRET_KEY') {{ '}}' }}"
+openshift_clusterid="{{ aws_cluster_id }}"
+openshift_hostname_check=false
 openshift_master_default_subdomain="{{ hostvars[groups[('lb' in groups) | ternary('lb', 'masters')][0]]["aws_ip"] }}.xip.io"
 
 [OSEv3:children]
