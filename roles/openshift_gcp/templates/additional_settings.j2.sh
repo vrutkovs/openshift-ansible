@@ -12,7 +12,7 @@ while true; do
 
     # DNS records for etcd servers
     {% for master in master_instances %}
-      MASTER_DNS_NAME="{{ openshift_gcp_prefix }}etcd-{{ loop.index-1 }}.{{ lookup('env', 'INSTANCE_PREFIX') | mandatory }}.{{ public_hosted_zone }}."
+      MASTER_DNS_NAME="{{ openshift_gcp_prefix }}etcd-{{ loop.index-1 }}.{{ public_hosted_zone }}."
       IP="{{ master.networkInterfaces[0].networkIP }}"
       if ! gcloud --project "{{ openshift_gcp_project }}" dns record-sets list -z "${dns_zone}" --name "{{ openshift_master_cluster_hostname }}" 2>/dev/null | grep -q "${MASTER_DNS_NAME}"; then
           if [[ ! -f $dns ]]; then
@@ -30,9 +30,7 @@ while true; do
         if [[ ! -f $dns ]]; then
             gcloud --project "{{ openshift_gcp_project }}" dns record-sets transaction --transaction-file=$dns start -z "${dns_zone}"
         fi
-        gcloud --project "{{ openshift_gcp_project }}" dns record-sets transaction --transaction-file=$dns add -z "${dns_zone}" --ttl {{ openshift_gcp_master_dns_ttl }} --name "${ETCD_DNS_NAME}" --type SRV {% for etcd_target in etcd_discovery_targets %} "{{ etcd_target }}"
-        {% endfor %}
-
+        gcloud --project "{{ openshift_gcp_project }}" dns record-sets transaction --transaction-file=$dns add -z "${dns_zone}" --ttl {{ openshift_gcp_master_dns_ttl }} --name "${ETCD_DNS_NAME}" --type SRV {{ etcd_discovery_targets }}
     else
         echo "DNS record for '${ETCD_DNS_NAME}' already exists"
     fi
@@ -42,8 +40,7 @@ while true; do
         if [[ ! -f $dns ]]; then
             gcloud --project "{{ openshift_gcp_project }}" dns record-sets transaction --transaction-file=$dns start -z "${dns_zone}"
         fi
-        gcloud --project "{{ openshift_gcp_project }}" dns record-sets transaction --transaction-file=$dns add -z "${dns_zone}" --ttl {{ openshift_gcp_master_dns_ttl }} --name "{{ openshift_master_cluster_public_hostname }}" --type A {{ bootstrap_instance.networkInterfaces[0].accessConfigs[0].natIP }} {% for master in master_instances %} "{{ master.networkInterfaces[0].accessConfigs[0].natIP }}"
-        {% endfor %}
+        gcloud --project "{{ openshift_gcp_project }}" dns record-sets transaction --transaction-file=$dns add -z "${dns_zone}" --ttl {{ openshift_gcp_master_dns_ttl }} --name "{{ openshift_master_cluster_public_hostname }}" --type A {{ bootstrap_instance.networkInterfaces[0].accessConfigs[0].natIP }} {{ master_external_ips }}
     else
         echo "DNS record for '{{ openshift_master_cluster_public_hostname }}' already exists"
     fi

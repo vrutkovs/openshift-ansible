@@ -291,10 +291,12 @@
 #     ip: "{{ item.1.networkInterfaces[0].networkIP }}"
 
 - set_fact:
-    etcd_discovery_targets: "{{ etcd_discovery_targets | default([]) }} + ['0 0 2380 {{ entry_name }}']"
+    etcd_discovery_targets: "{{ etcd_discovery_targets | default('') }} '0 0 2380 {{ entry_name }}'"
+    master_external_ips: "{{ master_external_ips | default('') }} '{{ master_ip }}'"
   with_indexed_items: "{{ master_instances }}"
   vars:
     entry_name: "{{ openshift_gcp_prefix }}etcd-{{ item.0 }}.{{ public_hosted_zone }}."
+    master_ip: "{{ item.1.networkInterfaces[0].accessConfigs[0].natIP }}"
 
 # - name: DNS entry for etcd discovery
 #   gcp_dns_resource_record_set:
