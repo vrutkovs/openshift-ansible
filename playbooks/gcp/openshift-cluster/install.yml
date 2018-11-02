@@ -1,4 +1,5 @@
 # This playbook installs onto a provisioned cluster
+#TODO: split into parts: nodes.yml, bootstrap.yml, masters.yml, workers.yml, bootkube/post_setup.yml
 ---
 - hosts: localhost
   connection: local
@@ -10,27 +11,161 @@
 
 - name: run the init
   import_playbook: ../../init/main.yml
+  vars:
+    l_init_fact_hosts: "bootstrap:masters:workers"
+    l_openshift_version_set_hosts: "bootstrap:masters:workers"
+    l_install_base_packages: True
+    l_repo_hosts: "all:!all"
 
-- import_playbook: ../../openshift-checks/private/install.yml
-
-- name: ensure master nodes are ready for bootstrapping
-  import_playbook: ../../openshift-node/private/bootstrap.yml
-
-- name: configure the control plane
-  import_playbook: ../../common/private/control_plane.yml
-
-- name: run the GCP specific post steps
-  import_playbook: install_gcp.yml
-
-- name: install components
-  import_playbook: ../../common/private/components.yml
-
-- name: Copy the kubeconfig, used by CI to determine when the containers are ready
-  hosts: oo_first_master
-  gather_facts: no
+- name: Install nodes
+  hosts: bootstrap:masters:workers
+  roles:
+    - role: container_runtime
   tasks:
-  - name: Retrieve cluster configuration
-    fetch:
-      src: "{{ openshift.common.config_base }}/master/admin.kubeconfig"
-      dest: "/tmp/"
-      flat: yes
+    - import_role:
+        name: container_runtime
+        tasks_from: docker_storage_setup_overlay.yml
+    - import_role:
+        name: container_runtime
+        tasks_from: extra_storage_setup.yml
+    - import_role:
+        name: container_runtime
+        tasks_from: package_crio.yml
+    - name: FIXME pause_image
+      ini_file:
+        dest: "/etc/crio/crio.conf"
+        section: crio.image
+        option: pause_image
+        value: '"docker.io/openshift/origin-pod:v4.0"'
+    - name: FIXME restart crio
+      service:
+        name: crio
+        state: restarted
+    - import_role:
+        name: openshift_node40
+        tasks_from: install.yml
+
+- name: Config bootstrap node
+  hosts: bootstrap
+  tasks:
+  #Have to disable SELinux here as temp API control plane tries to set ownership for /var/run/kubernetes/lock
+  - shell: "setenforce 0"
+  - import_role:
+      name: openshift_node40
+      tasks_from: config.yml
+  - import_role:
+      name: openshift_node40
+      tasks_from: systemd.yml
+    vars:
+      excluded_services:
+      - progress.service
+  - name: FIXME Save tectonic auth kubeconfig
+    slurp:
+      src: /opt/tectonic/auth/kubeconfig
+    register: master_kubeconfig
+
+- name: Start masters
+  hosts: masters
+  tasks:
+  # This is required for openshift_node40/config.yml
+  - set_fact:
+      openshift_bootstrap_endpoint: "https://{{ openshift_master_cluster_hostname }}:{{ mcd_port }}/config/master"
+  - name: Wait for bootstrap endpoint to show up
+    uri:
+      url: "{{ openshift_bootstrap_endpoint }}"
+      validate_certs: false
+    delay: 10
+    retries: 60
+    register: result
+    until:
+      - "'status' in result"
+      - result.status == 200
+  - import_role:
+      name: openshift_node40
+      tasks_from: config.yml
+  - name: Make sure etcd user exists
+    user:
+      name: etcd
+  - name: FIXME Update kubernetes kubeconfig
+    copy:
+      content: "{{ hostvars[groups['bootstrap'][0]]['master_kubeconfig'].content | b64decode }}"
+      dest: /etc/kubernetes/kubeconfig
+  - import_role:
+      name: openshift_node40
+      tasks_from: systemd.yml
+    vars:
+      excluded_services:
+      - etcd-member.service
+  - name: Wait for etcd-member service to start
+    systemd:
+      name: etcd-member
+      state: started
+    register: etcd_member_service
+    retries: 36
+    delay: 5
+    until: etcd_member_service.state == 'started'
+    ignore_errors: true
+
+- name: Start workers
+  hosts: workers
+  tasks:
+  # This is required for openshift_node40/config.yml
+  - set_fact:
+      openshift_bootstrap_endpoint: "https://{{ openshift_master_cluster_hostname }}:{{ mcd_port }}/config/worker"
+  - name: Wait for bootstrap endpoint to show up
+    uri:
+      url: "{{ openshift_bootstrap_endpoint }}"
+      validate_certs: false
+    delay: 10
+    retries: 60
+    register: result
+    until:
+      - "'status' in result"
+      - result.status == 200
+  - import_role:
+      name: openshift_node40
+      tasks_from: config.yml
+  - name: FIXME Update kubernetes kubeconfig
+    copy:
+      content: "{{ hostvars[groups['bootstrap'][0]]['master_kubeconfig'].content | b64decode }}"
+      dest: /etc/kubernetes/kubeconfig
+  - import_role:
+      name: openshift_node40
+      tasks_from: systemd.yml
+
+- name: Wait for nodes to become ready
+  hosts: bootstrap
+  tasks:
+  - name: Wait for temporary control plane to show up
+    #TODO: Rework with k8s module
+    oc_obj:
+      state: list
+      kind: pod
+      namespace: kube-system
+      kubeconfig: /opt/tectonic/auth/kubeconfig
+    register: control_plane_pods
+    retries: 60
+    delay: 10
+    until:
+    - "'results' in control_plane_pods and 'results' in control_plane_pods.results"
+    - control_plane_pods.results.results[0]['items'] | length > 0
+  - name: Wait for master nodes to show up
+  #TODO: Rework with k8s module
+    oc_obj:
+      state: list
+      kind: node
+      selector: "node-role.kubernetes.io/master"
+      kubeconfig: /opt/tectonic/auth/kubeconfig
+    register: master_nodes
+    retries: 60
+    delay: 10
+    until:
+    - "'results' in master_nodes and 'results' in master_nodes.results"
+    - master_nodes.results.results[0]['items'] | length > 0
+  - name: Wait for bootkube service to finish
+    service_facts: {}
+    #10 mins to complete temp plane
+    retries: 120
+    delay: 5
+    until: ansible_facts.services['bootkube.service'].state == 'stopped'
+    ignore_errors: true

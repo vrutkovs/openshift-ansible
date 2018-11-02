@@ -1,0 +1,203 @@
+# - name: Collect a list of instances
+#   gcp_compute_instance_facts:
+#     auth_kind: serviceaccount
+#     scopes:
+#     - https://www.googleapis.com/auth/compute
+#     service_account_file: "{{ openshift_gcp_iam_service_account_keyfile }}"
+#     project: "{{ openshift_gcp_project }}"
+#     zone: "{{ openshift_gcp_zone }}"
+#   register: all_instances
+#
+# - name: Filter instances to fetch masters
+#   set_fact:
+#     master_instances: "{{ master_instances | default([]) }} + [ {{ item }} ]"
+#   with_items:
+#     - "{{ all_instances['items'] }}"
+#   when:
+#   - "'tags' in item"
+#   - "'items' in item['tags']"
+#   - "'{{ openshift_gcp_prefix }}ocp' in item['tags']['items']"
+#   - "'ocp-master' in item['tags']['items']"
+
+# - name: Remove DNS entry for each etcd name
+#   gcp_dns_resource_record_set:
+#     auth_kind: serviceaccount
+#     scopes:
+#       - https://www.googleapis.com/auth/ndev.clouddns.readwrite
+#     service_account_file: "{{ openshift_gcp_iam_service_account_keyfile }}"
+#     project: "{{ openshift_gcp_project }}"
+#     name: "{{ openshift_gcp_prefix }}etcd-{{ item.0 }}.{{ lookup('env', 'INSTANCE_PREFIX') | mandatory }}.{{ public_hosted_zone }}."
+#     managed_zone:
+#       name: "{{ dns_managed_zone }}"
+#     type: 'A'
+#     state: absent
+#   with_indexed_items: "{{ master_instances }}"
+#
+# - name: Remove DNS entry public cluster hostname
+#   gcp_dns_resource_record_set:
+#     auth_kind: serviceaccount
+#     scopes:
+#       - https://www.googleapis.com/auth/ndev.clouddns.readwrite
+#     service_account_file: "{{ openshift_gcp_iam_service_account_keyfile }}"
+#     project: "{{ openshift_gcp_project }}"
+#     name: "{{ openshift_master_cluster_public_hostname }}."
+#     managed_zone:
+#       name: "{{ dns_managed_zone }}"
+#     type: 'A'
+#     state: absent
+#
+# - name: Remove etcd discovery entry
+#   gcp_dns_resource_record_set:
+#     auth_kind: serviceaccount
+#     scopes:
+#       - https://www.googleapis.com/auth/ndev.clouddns.readwrite
+#     service_account_file: "{{ openshift_gcp_iam_service_account_keyfile }}"
+#     project: "{{ openshift_gcp_project }}"
+#     name: "_etcd-server-ssl._tcp.{{ lookup('env', 'INSTANCE_PREFIX') | mandatory }}.{{ public_hosted_zone }}."
+#     managed_zone:
+#       name: "{{ dns_managed_zone }}"
+#     type: 'SRV'
+#     state: present
+
+
+- name: Remove GCP master LB kube forwarding rule
+  gcp_compute_forwarding_rule:
+    auth_kind: serviceaccount
+    scopes:
+    - https://www.googleapis.com/auth/compute
+    service_account_file: "{{ openshift_gcp_iam_service_account_keyfile }}"
+    project: "{{ openshift_gcp_project }}"
+    region: "{{ openshift_gcp_region }}"
+    name: "{{ openshift_gcp_prefix }}master-lb-kube-rule"
+    state: absent
+
+- name: Remove GCP master LB openshift forwarding rule
+  gcp_compute_forwarding_rule:
+    auth_kind: serviceaccount
+    scopes:
+    - https://www.googleapis.com/auth/compute
+    service_account_file: "{{ openshift_gcp_iam_service_account_keyfile }}"
+    project: "{{ openshift_gcp_project }}"
+    region: "{{ openshift_gcp_region }}"
+    name: "{{ openshift_gcp_prefix }}master-lb-openshift-rule"
+    state: absent
+
+- name: Remove GCP master LB healthcheck forwarding rule
+  gcp_compute_forwarding_rule:
+    auth_kind: serviceaccount
+    scopes:
+    - https://www.googleapis.com/auth/compute
+    service_account_file: "{{ openshift_gcp_iam_service_account_keyfile }}"
+    project: "{{ openshift_gcp_project }}"
+    region: "{{ openshift_gcp_region }}"
+    name: "{{ openshift_gcp_prefix }}master-lb-healthcheck-rule"
+    state: absent
+
+- name: Remove GCP master LB pool
+  gcp_compute_target_pool:
+    auth_kind: serviceaccount
+    scopes:
+    - https://www.googleapis.com/auth/compute
+    service_account_file: "{{ openshift_gcp_iam_service_account_keyfile }}"
+    project: "{{ openshift_gcp_project }}"
+    name: "{{ openshift_gcp_prefix }}master-lb-pool"
+    region: "{{ openshift_gcp_region }}"
+    state: absent
+
+- name: Remove GCP master LB health check
+  gcp_compute_health_check:
+    auth_kind: serviceaccount
+    scopes:
+    - https://www.googleapis.com/auth/compute
+    service_account_file: "{{ openshift_gcp_iam_service_account_keyfile }}"
+    project: "{{ openshift_gcp_project }}"
+    name: "{{ openshift_gcp_prefix }}master-lb-health-check"
+    state: absent
+
+- name: Remove master LB IP
+  gcp_compute_address:
+    auth_kind: serviceaccount
+    scopes:
+    - https://www.googleapis.com/auth/compute
+    service_account_file: "{{ openshift_gcp_iam_service_account_keyfile }}"
+    project: "{{ openshift_gcp_project }}"
+    name: "{{ openshift_gcp_prefix }}master-lb-ip"
+    region: "{{ openshift_gcp_region }}"
+    state: absent
+
+- name: Remove GCP firewall
+  gcp_compute_firewall:
+    auth_kind: serviceaccount
+    scopes:
+    - https://www.googleapis.com/auth/compute
+    service_account_file: "{{ openshift_gcp_iam_service_account_keyfile }}"
+    project: "{{ openshift_gcp_project }}"
+    name: "{{ openshift_gcp_prefix }}{{ item }}"
+    state: absent
+  with_items:
+  - icmp
+  - ssh-external
+  - ssh-internal
+  - master-internal
+  - master-external
+  - node-internal
+
+- name: Fetch instance group managers
+  gcp_compute_instance_group_manager_facts:
+    auth_kind: serviceaccount
+    scopes:
+    - https://www.googleapis.com/auth/compute
+    service_account_file: "{{ openshift_gcp_iam_service_account_keyfile }}"
+    project: "{{ openshift_gcp_project }}"
+    zone: "{{ openshift_gcp_zone }}"
+    filters:
+    - "name : {{ openshift_gcp_prefix }}ig*"
+  register: instance_group_managers
+
+- name: Fetch instance templates
+  gcp_compute_instance_template_facts:
+    auth_kind: serviceaccount
+    scopes:
+    - https://www.googleapis.com/auth/compute
+    service_account_file: "{{ openshift_gcp_iam_service_account_keyfile }}"
+    project: "{{ openshift_gcp_project }}"
+    filters:
+    - "name : {{ openshift_gcp_prefix }}instance-template*"
+  register: instance_templates
+
+- name: Remove GCP Instance Groups
+  gcp_compute_instance_group_manager:
+    auth_kind: serviceaccount
+    scopes:
+    - https://www.googleapis.com/auth/compute
+    service_account_file: "{{ openshift_gcp_iam_service_account_keyfile }}"
+    project: "{{ openshift_gcp_project }}"
+    zone: "{{ openshift_gcp_zone }}"
+    name: "{{ item[0].name }}"
+    base_instance_name: "{{ item[0].name }}"
+    instance_template: "{{ item[1] }}"
+    state: absent
+  with_nested:
+  - "{{ instance_group_managers['items'] }}"
+  - "{{ instance_templates['items'] }}"
+
+- name: Remove GCP instance templates
+  gcp_compute_instance_template:
+    auth_kind: serviceaccount
+    scopes:
+    - https://www.googleapis.com/auth/compute
+    service_account_file: "{{ openshift_gcp_iam_service_account_keyfile }}"
+    project: "{{ openshift_gcp_project }}"
+    name: "{{ item.name }}"
+    state: absent
+  with_items: "{{ instance_templates['items'] }}"
+
+- name: Remove GCP network
+  gcp_compute_network:
+    auth_kind: serviceaccount
+    scopes:
+    - https://www.googleapis.com/auth/compute
+    service_account_file: "{{ openshift_gcp_iam_service_account_keyfile }}"
+    project: "{{ openshift_gcp_project }}"
+    name: "{{ openshift_gcp_network_name }}"
+    state: absent
