@@ -20,30 +20,30 @@
 - name: Install nodes
   hosts: bootstrap:masters:workers
   roles:
-    - role: container_runtime
+  - role: container_runtime
   tasks:
-    - import_role:
-        name: container_runtime
-        tasks_from: docker_storage_setup_overlay.yml
-    - import_role:
-        name: container_runtime
-        tasks_from: extra_storage_setup.yml
-    - import_role:
-        name: container_runtime
-        tasks_from: package_crio.yml
-    - name: FIXME pause_image
-      ini_file:
-        dest: "/etc/crio/crio.conf"
-        section: crio.image
-        option: pause_image
-        value: '"docker.io/openshift/origin-pod:v4.0"'
-    - name: FIXME restart crio
-      service:
-        name: crio
-        state: restarted
-    - import_role:
-        name: openshift_node40
-        tasks_from: install.yml
+  - import_role:
+      name: container_runtime
+      tasks_from: docker_storage_setup_overlay.yml
+  - import_role:
+      name: container_runtime
+      tasks_from: extra_storage_setup.yml
+  - import_role:
+      name: container_runtime
+      tasks_from: package_crio.yml
+  - name: FIXME pause_image
+    ini_file:
+      dest: "/etc/crio/crio.conf"
+      section: crio.image
+      option: pause_image
+      value: '"docker.io/openshift/origin-pod:v4.0"'
+  - name: FIXME restart crio
+    service:
+      name: crio
+      state: restarted
+  - import_role:
+      name: openshift_node40
+      tasks_from: install.yml
 
 - name: Config bootstrap node
   hosts: bootstrap
@@ -72,8 +72,8 @@
     retries: 60
     register: result
     until:
-      - "'status' in result"
-      - result.status == 200
+    - "'status' in result"
+    - result.status == 200
   - import_role:
       name: openshift_node40
       tasks_from: config.yml
@@ -110,8 +110,8 @@
     retries: 60
     register: result
     until:
-      - "'status' in result"
-      - result.status == 200
+    - "'status' in result"
+    - result.status == 200
   - import_role:
       name: openshift_node40
       tasks_from: config.yml
@@ -136,7 +136,7 @@
     - "'results' in control_plane_pods and 'results' in control_plane_pods.results"
     - control_plane_pods.results.results[0]['items'] | length > 0
   - name: Wait for master nodes to show up
-  #TODO: Rework with k8s module
+    #TODO: Rework with k8s module
     oc_obj:
       state: list
       kind: node

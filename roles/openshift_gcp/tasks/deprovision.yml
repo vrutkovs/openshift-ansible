@@ -1,3 +1,4 @@
+---
 # - name: Collect a list of instances
 #   gcp_compute_instance_facts:
 #     auth_kind: serviceaccount
@@ -16,7 +17,7 @@
 #   when:
 #   - "'tags' in item"
 #   - "'items' in item['tags']"
-#   - "'{{ openshift_gcp_prefix }}ocp' in item['tags']['items']"
+#   - "'"+ openshift_gcp_prefix + "ocp' in item['tags']['items']"
 #   - "'ocp-master' in item['tags']['items']"
 
 # - name: Remove DNS entry for each etcd name

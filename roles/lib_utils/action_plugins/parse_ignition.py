@@ -4,10 +4,10 @@ import base64
 import os
 
 from ansible.plugins.action import ActionBase
-from ansible import errors
 from six.moves import urllib
 
 
+# pylint: disable=too-many-function-args
 def get_files(files_dict, systemd_dict, dir_list, data):
     """parse data to populate file_dict"""
     files = data.get('storage', []).get('files', [])
@@ -39,6 +39,7 @@ def get_files(files_dict, systemd_dict, dir_list, data):
         systemd_dict[name] = enabled
 
 
+# pylint: disable=too-few-public-methods
 class ActionModule(ActionBase):
     """ActionModule for parse_ignition.py"""
 

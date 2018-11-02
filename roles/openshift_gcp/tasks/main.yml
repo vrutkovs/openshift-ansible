@@ -199,10 +199,10 @@
     instance_template: "{{ item }}"
     target_size: "{{ item.item.scale | int}}"
     named_ports:
-      - name: "{{ openshift_gcp_prefix }}port-kube-api"
-        port: "{{ openshift_gcp_kubernetes_api_port }}"
-      - name: "{{ openshift_gcp_prefix }}port-openshift-api"
-        port: "{{ openshift_master_api_port }}"
+    - name: "{{ openshift_gcp_prefix }}port-kube-api"
+      port: "{{ openshift_gcp_kubernetes_api_port }}"
+    - name: "{{ openshift_gcp_prefix }}port-openshift-api"
+      port: "{{ openshift_master_api_port }}"
     state: present
   with_items: "{{ instance_template.results }}"
   register: instance_groups
@@ -252,23 +252,27 @@
   set_fact:
     bootstrap_instance: "{{ item }}"
   with_items:
-    - "{{ all_instances['items'] }}"
+  - "{{ all_instances['items'] }}"
   when:
   - "'tags' in item"
   - "'items' in item['tags']"
-  - "'{{ openshift_gcp_prefix }}ocp' in item['tags']['items']"
+  - "cluster_tag in item['tags']['items']"
   - "'ocp-bootstrap' in item['tags']['items']"
+  vars:
+    cluster_tag: "{{ openshift_gcp_prefix }}ocp"
 
 - name: Filter instances to fetch masters
   set_fact:
     master_instances: "{{ master_instances | default([]) }} + [ {{ item }} ]"
   with_items:
-    - "{{ all_instances['items'] }}"
+  - "{{ all_instances['items'] }}"
   when:
   - "'tags' in item"
   - "'items' in item['tags']"
-  - "'{{ openshift_gcp_prefix }}ocp' in item['tags']['items']"
+  - "cluster_tag in item['tags']['items']"
   - "'ocp-master' in item['tags']['items']"
+  vars:
+    cluster_tag: "{{ openshift_gcp_prefix }}ocp"
 
 # - name: DNS entry for each etcd name
 #   gcp_dns_resource_record_set:

@@ -9,7 +9,7 @@ MODULE_PATH = os.path.realpath(os.path.join(__file__, os.pardir, os.pardir, 'act
 sys.path.insert(0, MODULE_PATH)
 
 # pylint: disable=import-error,wrong-import-position,missing-docstring
-import parse_ignition # noqa: E402
+import parse_ignition  # noqa: E402
 
 
 def read_ign(path):
@@ -44,7 +44,7 @@ def test_parse_json_encoded_files():
     result['files_dict'] = files_dict
     result['systemd_dict'] = systemd_dict
     parse_ignition.get_files(files_dict, systemd_dict, dir_list, ign_data)
-    #print(files_dict['/opt/tectonic/manifests/cluster-config.yaml']['contents'])
+    # print(files_dict['/opt/tectonic/manifests/cluster-config.yaml']['contents'])
 
 
 def parse_json2():

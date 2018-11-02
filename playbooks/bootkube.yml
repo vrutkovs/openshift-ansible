@@ -64,8 +64,8 @@
     retries: 60
     register: result
     until:
-      - "'status' in result"
-      - result.status == 200
+    - "'status' in result"
+    - result.status == 200
   - import_role:
       name: openshift_node40
       tasks_from: config.yml
@@ -92,8 +92,8 @@
     retries: 60
     register: result
     until:
-      - "'status' in result"
-      - result.status == 200
+    - "'status' in result"
+    - result.status == 200
   - import_role:
       name: openshift_node40
       tasks_from: config.yml
