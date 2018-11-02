@@ -48,8 +48,6 @@
 - name: Config bootstrap node
   hosts: bootstrap
   tasks:
-  #Have to disable SELinux here as temp API control plane tries to set ownership for /var/run/kubernetes/lock
-  - shell: "setenforce 0"
   - import_role:
       name: openshift_node40
       tasks_from: config.yml
@@ -59,10 +57,6 @@
     vars:
       excluded_services:
       - progress.service
-  - name: FIXME Save tectonic auth kubeconfig
-    slurp:
-      src: /opt/tectonic/auth/kubeconfig
-    register: master_kubeconfig
 
 - name: Start masters
   hosts: masters
@@ -86,10 +80,6 @@
   - name: Make sure etcd user exists
     user:
       name: etcd
-  - name: FIXME Update kubernetes kubeconfig
-    copy:
-      content: "{{ hostvars[groups['bootstrap'][0]]['master_kubeconfig'].content | b64decode }}"
-      dest: /etc/kubernetes/kubeconfig
   - import_role:
       name: openshift_node40
       tasks_from: systemd.yml
@@ -125,10 +115,6 @@
   - import_role:
       name: openshift_node40
       tasks_from: config.yml
-  - name: FIXME Update kubernetes kubeconfig
-    copy:
-      content: "{{ hostvars[groups['bootstrap'][0]]['master_kubeconfig'].content | b64decode }}"
-      dest: /etc/kubernetes/kubeconfig
   - import_role:
       name: openshift_node40
       tasks_from: systemd.yml
