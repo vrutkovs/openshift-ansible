@@ -2,9 +2,9 @@
 
 import base64
 import os
-
-from ansible.plugins.action import ActionBase
+import six
 from six.moves import urllib
+from ansible.plugins.action import ActionBase
 
 
 # pylint: disable=too-many-function-args
@@ -28,7 +28,10 @@ def get_files(files_dict, systemd_dict, dir_list, data):
     # get the systemd units files we're here
     systemd_units = data.get('systemd', []).get('units', [])
     for item in systemd_units:
-        contents = item['contents'].decode('unicode-escape')
+        contents = item['contents']
+        if six.PY2:
+            # pylint: disable=redefined-variable-type
+            contents = contents.decode('unicode-escape')
         mode = "0644"
         inode = {"contents": contents, "mode": mode}
         name = item['name']

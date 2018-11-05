@@ -7,6 +7,7 @@ import sys
 
 MODULE_PATH = os.path.realpath(os.path.join(__file__, os.pardir, os.pardir, 'action_plugins'))
 sys.path.insert(0, MODULE_PATH)
+ASSET_PATH = os.path.realpath(os.path.join(__file__, os.pardir, 'test_data'))
 
 # pylint: disable=import-error,wrong-import-position,missing-docstring
 import parse_ignition  # noqa: E402
@@ -25,7 +26,7 @@ def write_out_files(files_dict):
 
 
 def test_parse_json():
-    ign_data = read_ign('test_data/example.ign.json')
+    ign_data = read_ign(os.path.join(ASSET_PATH, 'example.ign.json'))
     files_dict = {}
     systemd_dict = {}
     dir_list = set()
@@ -36,7 +37,7 @@ def test_parse_json():
 
 
 def test_parse_json_encoded_files():
-    ign_data = read_ign('test_data/bootstrap.ign.json')
+    ign_data = read_ign(os.path.join(ASSET_PATH, 'bootstrap.ign.json'))
     files_dict = {}
     systemd_dict = {}
     dir_list = set()
@@ -48,7 +49,7 @@ def test_parse_json_encoded_files():
 
 
 def parse_json2():
-    ign_data = read_ign('test_data/bs.ign.json')
+    ign_data = read_ign(os.path.join(ASSET_PATH, 'bs.ign.json'))
     files_dict = {}
     systemd_dict = {}
     dir_list = set()
