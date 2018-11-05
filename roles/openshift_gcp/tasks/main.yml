@@ -1,12 +1,4 @@
-#TODO ansiblize ssh key provision
-#TODO ansiblize DNS config
 ---
-# - name: Provision GCP DNS domain
-#   gcdns_zone:
-#     zone: "{{ dns_managed_zone | default(openshift_gcp_prefix + 'managed-zone') }}"
-#     description: "{{ public_hosted_zone }} domain"
-#     state: present
-#
 - name: Create GCP network
   gcp_compute_network:
     auth_kind: serviceaccount
@@ -17,128 +9,6 @@
     name: "{{ openshift_gcp_network_name }}"
     state: present
   register: network
-
-# - name: Create GCP firewall
-#   gcp_compute_firewall:
-#     auth_kind: serviceaccount
-#     scopes:
-#     - https://www.googleapis.com/auth/compute
-#     service_account_file: "{{ openshift_gcp_iam_service_account_keyfile }}"
-#     project: "{{ openshift_gcp_project }}"
-#     name: "{{ openshift_gcp_prefix }}{{ item.rule }}"
-#     allowed: "{{ item.allowed }}"
-#     network: "{{ network.selfLink }}"
-#     target_tags: "{{ item.target_tags | default(omit) }}"
-#     source_tags: "{{ item.source_tags | default(omit) }}"
-#     state: present
-#   with_items:
-#   - rule: icmp
-#     allowed:
-#     - ip_protocol: 'icmp'
-#   - rule: ssh-external
-#     allowed:
-#     - ip_protocol: 'tcp'
-#       ports:
-#       - '22'
-#   - rule: ssh-internal
-#     allowed:
-#     - ip_protocol: 'tcp'
-#       ports:
-#       - '22'
-#     source_tags:
-#     - ssh-bastion
-#   - rule: master-internal
-#     allowed:
-#     - ip_protocol: 'tcp'
-#       ports:
-#       - '2224'
-#       - '2379'
-#       - '2380'
-#       - '4001'
-#       - "{{ openshift_gcp_kubernetes_api_port }}"
-#       - "{{ internal_console_port }}"
-#       - '8053'
-#       - '8444'
-#       - "{{ openshift_gcp_master_healthcheck_port }}"
-#       - '10250'
-#       - '10255'
-#       - '24224'
-#       - "{{ mcd_port }}"
-#     - ip_protocol: 'udp'
-#       ports:
-#       - '4789'
-#       - '5404'
-#       - '5405'
-#       - '10255'
-#       - '24224'
-#     source_tags:
-#     - ocp
-#     target_tags:
-#     - ocp-master
-#     - ocp-bootstrap
-#   - rule: master-external
-#     allowed:
-#     - ip_protocol: 'tcp'
-#       ports:
-#       - '80'
-#       - '443'
-#       - '1936'
-#       - "{{ openshift_gcp_master_healthcheck_port }}"
-#       - "{{ openshift_gcp_kubernetes_api_port }}"
-#       - "{{ openshift_master_api_port }}"
-#       - "{{ mcd_port }}"
-#       - "{{ openshift_node_port_range }}"
-#     - ip_protocol: 'udp'
-#       ports:
-#       - "{{ openshift_node_port_range }}"
-#     target_tags:
-#     - ocp-master
-#     - ocp-bootstrap
-#   - rule: node-internal
-#     allowed:
-#     - ip_protocol: 'tcp'
-#       ports:
-#       - '10250'
-#       - '10255'
-#       - '9000-10000'
-#     - ip_protocol: 'udp'
-#       ports:
-#       - '4789'
-#       - '10255'
-#     source_tags:
-#     - ocp
-#     target_tags:
-#     - ocp-node
-
-#=================
-#FIXME
-#=================
-# - name: DNS entry for public cluster hostname
-#   gcp_dns_resource_record_set:
-#     auth_kind: serviceaccount
-#     scopes:
-#       - https://www.googleapis.com/auth/ndev.clouddns.readwrite
-#     service_account_file: "{{ openshift_gcp_iam_service_account_keyfile }}"
-#     project: "{{ openshift_gcp_project }}"
-#     name: "{{ openshift_master_cluster_public_hostname }}."
-#     managed_zone:
-#       name: "{{ dns_managed_zone }}"
-#     type: 'A'
-#     ttl: "{{ openshift_gcp_master_dns_ttl }}"
-#     target:
-#       - "{{ master_external_address.address }}"
-#     state: present
-
-# - name: Create router external IP
-#   gcp_compute_address:
-#     auth_kind: serviceaccount
-#     scopes:
-#     - https://www.googleapis.com/auth/compute
-#     service_account_file: "{{ openshift_gcp_iam_service_account_keyfile }}"
-#     project: "{{ openshift_gcp_project }}"
-#     region: "{{ openshift_gcp_region }}"
-#     name: "{{ openshift_gcp_prefix }}router-network-lb-ip"
-#     state: present
 
 - import_tasks: provision_ssh_keys.yml
 
@@ -274,26 +144,6 @@
   vars:
     cluster_tag: "{{ openshift_gcp_prefix }}ocp"
 
-# - name: DNS entry for each etcd name
-#   gcp_dns_resource_record_set:
-#     auth_kind: serviceaccount
-#     scopes:
-#       - https://www.googleapis.com/auth/ndev.clouddns.readwrite
-#     service_account_file: "{{ openshift_gcp_iam_service_account_keyfile }}"
-#     project: "{{ openshift_gcp_project }}"
-#     name: "{{ entry_name }}"
-#     managed_zone:
-#       name: "{{ dns_managed_zone }}"
-#     type: 'A'
-#     ttl: "{{ openshift_gcp_master_dns_ttl }}"
-#     target:
-#       - "{{ ip }}"
-#     state: present
-#   with_indexed_items: "{{ master_instances }}"
-#   vars:
-#     entry_name: "{{ openshift_gcp_prefix }}etcd-{{ item.0 }}.{{ lookup('env', 'INSTANCE_PREFIX') | mandatory }}.{{ public_hosted_zone }}."
-#     ip: "{{ item.1.networkInterfaces[0].networkIP }}"
-
 - set_fact:
     etcd_discovery_targets: "{{ etcd_discovery_targets | default('') }} '0 0 2380 {{ entry_name }}'"
     master_external_ips: "{{ master_external_ips | default('') }} '{{ master_ip }}'"
@@ -302,27 +152,6 @@
     entry_name: "{{ openshift_gcp_prefix }}etcd-{{ item.0 }}.{{ public_hosted_zone }}."
     master_ip: "{{ item.1.networkInterfaces[0].accessConfigs[0].natIP }}"
 
-# - name: DNS entry for etcd discovery
-#   gcp_dns_resource_record_set:
-#     auth_kind: serviceaccount
-#     scopes:
-#       - https://www.googleapis.com/auth/ndev.clouddns.readwrite
-#     service_account_file: "{{ openshift_gcp_iam_service_account_keyfile }}"
-#     project: "{{ openshift_gcp_project }}"
-#     name: "_etcd-server-ssl._tcp.{{ lookup('env', 'INSTANCE_PREFIX') | mandatory }}.{{ public_hosted_zone }}."
-#     managed_zone:
-#       name: "{{ dns_managed_zone }}"
-#     type: 'SRV'
-#     ttl: 600
-#     target: "{{ etcd_discovery_targets }}"
-#     state: present
-
-# - name: Router LB
-# - name: Registry bucket
-# - name: Wait for bootstrap group to become stable
-
-
-#TODO: convert those to ansible tasks
 - name: Templatize DNS script
   template: src=additional_settings.j2.sh dest=/tmp/additional_settings.sh mode=u+rx
 
