@@ -10,7 +10,7 @@
       tasks_from: setup_scale_group_facts.yml
 
 - name: run the init
-  import_playbook: ../../init/main.yml
+  import_playbook: ../../playbooks/init/main.yml
   vars:
     l_init_fact_hosts: "bootstrap:masters:workers"
     l_openshift_version_set_hosts: "bootstrap:masters:workers"

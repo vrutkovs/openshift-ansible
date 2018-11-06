@@ -78,7 +78,7 @@
   roles:
   - role: openshift_repos
 
-- import_playbook: ../../init/base_packages.yml
+- import_playbook: ../../playbooks/init/base_packages.yml
   vars:
     l_base_packages_hosts: nodes
 
