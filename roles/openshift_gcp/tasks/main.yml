@@ -10,6 +10,21 @@
     state: present
   register: network
 
+- name: Create GCP firewall
+  gcp_compute_firewall:
+    auth_kind: serviceaccount
+    scopes:
+    - https://www.googleapis.com/auth/compute
+    service_account_file: "{{ openshift_gcp_iam_service_account_keyfile }}"
+    project: "{{ openshift_gcp_project }}"
+    name: "{{ openshift_gcp_prefix }}{{ item.rule }}"
+    allowed: "{{ item.allowed }}"
+    network: "{{ network.selfLink }}"
+    target_tags: "{{ item.target_tags | default(omit) }}"
+    source_tags: "{{ item.source_tags | default(omit) }}"
+    state: present
+  with_items: "{{ openshift_gcp_firewall_rules }}"
+
 - import_tasks: provision_ssh_keys.yml
 
 - name: Find GCP image
