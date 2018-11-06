@@ -83,18 +83,6 @@
   - import_role:
       name: openshift_node40
       tasks_from: systemd.yml
-    vars:
-      excluded_services:
-      - etcd-member.service
-  - name: Wait for etcd-member service to start
-    systemd:
-      name: etcd-member
-      state: started
-    register: etcd_member_service
-    retries: 36
-    delay: 5
-    until: etcd_member_service.state == 'started'
-    ignore_errors: true
 
 - name: Start workers
   hosts: workers
