@@ -3,11 +3,6 @@
   connection: local
   gather_facts: false
   tasks:
-    - include_vars: "{{ item }}"
-      with_first_found:
-        - vars.yml
-        - vars.yaml
-
     - name: Gather ec2 facts
       ec2_instance_facts:
         region: "{{ aws_region }}"

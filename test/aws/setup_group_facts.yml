@@ -1,0 +1,30 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+  - meta: refresh_inventory
+
+  - name: Gather ec2 facts
+    ec2_instance_facts:
+      region: "{{ aws_region }}"
+      filters:
+        tag-key: "kubernetes.io/cluster/{{ aws_cluster_id }}"
+    register: ec2
+
+  - debug:
+      msg: "'{{ item.tags['ansible-groups'] }}' {{ item.tags['ansible-groups'].split(',') | list }}"
+    with_items: "{{ ec2.instances }}"
+
+  - name: Add instance to the group
+    add_host:
+      name: "{{ item.public_dns_name }}"
+      groups: "{{ item.tags['ansible-groups'].split(',') | list }}"
+      ignition_file: "{{ ('bootstrap' in groups) | ternary(openshift_aws_bootstrap_ignition_file, omit) }}"
+      aws_region: "{{ aws_region }}"
+      aws_basedomain: "{{ aws_basedomain }}"
+      aws_cluster_id: "{{ aws_cluster_id }}"
+      openshift_clusterid: "{{ aws_cluster_id }}"
+    with_items: "{{ ec2.instances }}"
+    vars:
+      groups: "{{ item.tags['ansible-groups'].split(',') | list }}"
