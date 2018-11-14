@@ -32,7 +32,7 @@
       zone: "{{ openshift_gcp_zone }}"
       name: "{{ openshift_gcp_prefix }}build-image-instance"
       disk_type: pd-ssd
-      image: "{{ openshift_gcp_base_image }}"
+      image: "centos-7"
       size_gb: 10
       state: present
 
@@ -55,6 +55,7 @@
   - name: add host to nodes
     add_host:
       hostname: "{{ item.public_ip }}"
+      ansible_user: "centos"
       groupname: nodes
     with_items: "{{ gce.instance_data }}"
 
