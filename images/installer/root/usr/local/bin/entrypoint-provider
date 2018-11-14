@@ -60,6 +60,15 @@ if [[ "$TYPE" == 'gcp' ]]; then
   fi
 fi
 
+if [[ "$TYPE" == 'aws' ]]; then
+  if [[ -f "${FILES}/.awscred" ]]; then
+    mkdir "${HOME}/.boto"
+    cat "${FILES}/.awscred" > ${HOME}/.boto/boto.cfg
+  else
+    echo "No AWS credentials found, bypassing login"
+  fi
+fi
+
 if [[ "$TYPE" == 'azure' ]]; then
   if [[ -f "${FILES}/credentials" ]]; then
     set -a
