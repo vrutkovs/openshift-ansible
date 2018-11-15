@@ -33,10 +33,6 @@ find "${FILES}" \( -name '*.yml' -or -name '*.yaml' -or -name vars \) -print0 | 
 mkdir -p "${WORK}/inventory/dynamic/${TYPE}/host_vars/localhost"
 echo "ansible_become: no" > "${WORK}/inventory/dynamic/${TYPE}/host_vars/localhost/00_skip_root.yaml"
 
-if [[ -z "${ANSIBLE_CONFIG-}" ]]; then
-  export ANSIBLE_CONFIG="${WORK}/inventory/dynamic/${TYPE}/ansible.cfg"
-fi
-
 # SSH requires the file to be owned by the current user, but Docker copies
 # files in as root. Put the file into the ssh dir with the right permissions
 if [[ -f "${FILES}/ssh-privatekey" ]]; then
@@ -81,5 +77,7 @@ if [[ "$TYPE" == 'azure' ]]; then
     echo "No service account file found at ${FILES}/credentials, bypassing login"
   fi
 fi
+
+export ANSIBLE_CONFIG="${WORK}/inventory/dynamic/${TYPE}/ansible.cfg"
 
 exec "$@"
