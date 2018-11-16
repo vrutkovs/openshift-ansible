@@ -1,5 +1,5 @@
 ---
-- hosts: bootstrap:masters:workers
+- hosts: nodes
   gather_facts: no
   tasks:
   - wait_for_connection: {}
@@ -29,10 +29,10 @@
 - import_playbook: ../../playbooks/init/main.yml
   vars:
     l_install_base_packages: True
-    l_repo_hosts: "bootstrap:masters:workers"
+    l_repo_hosts: "nodes"
 
 # Setup openshift_additional_repos
-- hosts: bootstrap:masters:workers
+- hosts: nodes
   tasks:
   - name: initialize openshift repos
     import_role:
