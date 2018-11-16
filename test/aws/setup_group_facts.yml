@@ -12,10 +12,6 @@
         tag-key: "kubernetes.io/cluster/{{ aws_cluster_id }}"
     register: ec2
 
-  - debug:
-      msg: "'{{ item.tags['ansible-groups'] }}' {{ item.tags['ansible-groups'].split(',') | list }}"
-    with_items: "{{ ec2.instances }}"
-
   - name: Add instance to the group
     add_host:
       name: "{{ item.public_dns_name }}"

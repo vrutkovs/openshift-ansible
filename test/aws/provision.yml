@@ -3,8 +3,6 @@
   connection: local
   gather_facts: false
   tasks:
-    - debug:
-        var: groups
     - name: list available AMIs
       ec2_ami_facts:
         region: "{{ aws_region }}"
