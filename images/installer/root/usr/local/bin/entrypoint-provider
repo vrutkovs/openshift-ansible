@@ -58,8 +58,8 @@ fi
 
 if [[ "$TYPE" == 'aws' ]]; then
   if [[ -f "${FILES}/.awscred" ]]; then
-    mkdir "${HOME}/.boto"
-    cat "${FILES}/.awscred" > ${HOME}/.boto/boto.cfg
+    mkdir "${HOME}/.aws"
+    cat "${FILES}/.awscred" > ${HOME}/.aws/credentials
   else
     echo "No AWS credentials found, bypassing login"
   fi
