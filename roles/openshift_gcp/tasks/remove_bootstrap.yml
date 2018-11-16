@@ -1,0 +1,44 @@
+---
+- name: Get bootstrap instance group
+  gcp_compute_instance_group_manager_facts:
+    auth_kind: serviceaccount
+    scopes:
+    - https://www.googleapis.com/auth/compute
+    service_account_file: "{{ openshift_gcp_iam_service_account_keyfile }}"
+    project: "{{ openshift_gcp_project }}"
+    zone: "{{ openshift_gcp_zone }}"
+    filters:
+    - name = "{{ openshift_gcp_prefix }}ig-b"
+  register: bootstrap_instance_group
+
+- name: Get bootstrap instance template
+  gcp_compute_instance_template_facts:
+    auth_kind: serviceaccount
+    scopes:
+    - https://www.googleapis.com/auth/compute
+    service_account_file: "{{ openshift_gcp_iam_service_account_keyfile }}"
+    project: "{{ openshift_gcp_project }}"
+    filters:
+    - "name : {{ openshift_gcp_prefix }}instance-template-bootstrap"
+  register: bootstrap_instance_template
+
+- name: Scale bootstrap instance group to 0
+  gcp_compute_instance_group_manager:
+    auth_kind: serviceaccount
+    scopes:
+    - https://www.googleapis.com/auth/compute
+    service_account_file: "{{ openshift_gcp_iam_service_account_keyfile }}"
+    project: "{{ openshift_gcp_project }}"
+    zone: "{{ openshift_gcp_zone }}"
+    name: "{{ bootstrap_instance_group['items'][0]['name'] }}"
+    base_instance_name: "{{ bootstrap_instance_group['items'][0]['baseInstanceName'] }}"
+    instance_template: "{{ bootstrap_instance_template['items'][0] }}"
+    target_size: "0"
+
+- name: Templatize DNS script
+  template: src=remove_bootstrap.j2.sh dest=/tmp/remove_bootstrap.sh mode=u+rx
+
+- name: Run DNS cleanup script
+  command: /tmp/remove_bootstrap.sh
+  args:
+    chdir: "{{ files_dir }}"
