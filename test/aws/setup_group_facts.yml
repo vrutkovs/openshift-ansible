@@ -16,7 +16,7 @@
     add_host:
       name: "{{ item.public_dns_name }}"
       groups: "{{ item.tags['ansible-groups'].split(',') | list }}"
-      ignition_file: "{{ ('bootstrap' in groups) | ternary(openshift_aws_bootstrap_ignition_file, omit) }}"
+      ignition_file: "{{ ('bootstrap' in groups) | ternary(openshift_bootstrap_ignition_file, omit) }}"
       aws_region: "{{ aws_region }}"
       aws_basedomain: "{{ aws_basedomain }}"
       aws_cluster_id: "{{ aws_cluster_id }}"
