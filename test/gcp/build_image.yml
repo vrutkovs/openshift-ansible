@@ -55,7 +55,6 @@
   - name: add host to nodes
     add_host:
       hostname: "{{ item.public_ip }}"
-      ansible_user: "centos"
       groupname: nodes
     with_items: "{{ gce.instance_data }}"
 
