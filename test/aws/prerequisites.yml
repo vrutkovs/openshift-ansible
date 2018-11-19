@@ -26,7 +26,7 @@
       timeout: 300
   - setup: {}
 
-- hosts: masters:workers
+- hosts: nodes
   tasks:
     - set_fact:
         openshift_master_cluster_public_hostname: "{{ hostvars[groups['bootstrap'][0]]['public_dns_name'] }}"
