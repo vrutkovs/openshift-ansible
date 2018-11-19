@@ -10,6 +10,7 @@ while true; do
     dns="${TMPDIR:-/tmp}/dns.yaml"
     rm -f $dns
     gcloud dns record-sets export --project "{{ openshift_gcp_project }}" -z "${dns_zone}" --zone-file-format "${dns}"
+    cat "${dns}"
 
     # Fetch API record to get a list of masters + bootstrap node
     public_ip_output=($(grep -F -e '{{ openshift_master_cluster_public_hostname }}.' "${dns}" | awk '{ print $5 }')) || public_ip_output=""
