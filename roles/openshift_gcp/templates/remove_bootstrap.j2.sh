@@ -8,10 +8,7 @@ dns_zone="{{ dns_managed_zone | default(openshift_gcp_prefix + 'managed-zone') }
 # Retry DNS changes until they succeed since this may be a shared resource
 while true; do
     dns="${TMPDIR:-/tmp}/dns.yaml"
-    dns_transaction="${TMPDIR:-/tmp}/dns.transaction"
     rm -f $dns
-    rm -f $dns_transaction
-    gcloud --project "{{ openshift_gcp_project }}" dns record-sets transaction --transaction-file=$dns_transaction start -z "${dns_zone}"
     gcloud dns record-sets export --project "{{ openshift_gcp_project }}" -z "${dns_zone}" --zone-file-format "${dns}"
 
     # Fetch API record to get a list of masters + bootstrap node
@@ -26,10 +23,10 @@ while true; do
     done
     if [ -s "${dns}.input" ]; then
         cat "${dns}.input"
-        cat "${dns}.input" | xargs -L1 gcloud --project "{{ openshift_gcp_project }}" dns record-sets transaction --transaction-file="${dns_transaction}" remove -z "${dns_zone}"
-        cat "${dns_transaction}"
+        cat "${dns}.input" | xargs -L1 gcloud --project "{{ openshift_gcp_project }}" dns record-sets transaction --transaction-file="${dns}" remove -z "${dns_zone}"
+        cat "${dns}"
         # Commit all DNS changes, retrying if preconditions are not met
-        if ! out="$( gcloud --project "{{ openshift_gcp_project }}" dns record-sets transaction --transaction-file=$dns_transaction execute -z "${dns_zone}" 2>&1 )"; then
+        if ! out="$( gcloud --project "{{ openshift_gcp_project }}" dns record-sets transaction --transaction-file=$dns execute -z "${dns_zone}" 2>&1 )"; then
             rc=$?
             if [[ "${out}" == *"HTTPError 412: Precondition not met"* ]]; then
                 continue
