@@ -21,6 +21,7 @@
       aws_basedomain: "{{ aws_basedomain }}"
       aws_cluster_id: "{{ aws_cluster_id }}"
       openshift_clusterid: "{{ aws_cluster_id }}"
+      public_dns_name: "{{ ('bootstrap' in ansible_groups) | bool | ternary(item.public_dns_name, omit) }}"
     with_items: "{{ ec2.instances }}"
     vars:
       ansible_groups: "{{ item.tags['ansible-groups'].split(',') | list }}"

@@ -26,6 +26,11 @@
       timeout: 300
   - setup: {}
 
+- hosts: masters:workers
+  tasks:
+    - set_fact:
+        openshift_master_cluster_public_hostname: "{{ hostvars[groups['bootstrap'][0]]['public_dns_name'] }}"
+
 - import_playbook: ../../playbooks/init/main.yml
   vars:
     l_install_base_packages: True
