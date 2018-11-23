@@ -169,3 +169,27 @@
     - "'status' in ingress_ds.results.results[0]"
     - "'numberReady' in ingress_ds.results.results[0]['status']"
     - ingress_ds.results.results[0]['status']['numberReady'] == groups['workers'] | length
+
+  - name: Wait for console route to appear
+    oc_obj:
+      state: list
+      kind: route
+      name: console
+      namespace: openshift-console
+      kubeconfig: /opt/tectonic/auth/kubeconfig
+    register: console_route
+    retries: 60
+    delay: 10
+    until:
+    - "'results' in console_route"
+    - "'results' in console_route.results"
+    - console_route.results.results | length > 0
+
+  - name: Update console route
+    oc_edit:
+      kind: route
+      name: console
+      namespace: openshift-console
+      kubeconfig: /opt/tectonic/auth/kubeconfig
+      content:
+        spec.host: "{{ openshift_master_public_console_hostname }}"
