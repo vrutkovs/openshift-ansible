@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -euxo pipefail
+set -euo pipefail
 
 dns_zone="{{ dns_managed_zone | default(openshift_gcp_prefix + 'managed-zone') }}"
 # configure DNS
@@ -20,6 +20,18 @@ while true; do
 
     else
         echo "DNS record for '${ETCD_DNS_NAME}' already exists"
+    fi
+
+    # Wildcard DNS record for apps
+    APPS_NAME='*.{{ wildcard_zone }}.'
+    if ! gcloud --project "{{ openshift_gcp_project }}" dns record-sets list -z "${dns_zone}" --name "${APPS_NAME}" 2>/dev/null | grep -q "${APPS_NAME}"; then
+        if [[ ! -f $dns ]]; then
+            gcloud --project "{{ openshift_gcp_project }}" dns record-sets transaction --transaction-file=$dns start -z "${dns_zone}"
+        fi
+        gcloud --project "{{ openshift_gcp_project }}" dns record-sets transaction --transaction-file=$dns add -z "${dns_zone}" --ttl {{ openshift_gcp_master_dns_ttl }} --name "${APPS_NAME}" --type A {% for worker in worker_external_ips %}'{{ worker }}' {% endfor %}
+
+    else
+        echo "DNS record for '${APPS_NAME}' already exists"
     fi
 
     # Commit all DNS changes, retrying if preconditions are not met

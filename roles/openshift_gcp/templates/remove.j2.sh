@@ -18,6 +18,8 @@ if gcloud --project "{{ openshift_gcp_project }}" dns managed-zones describe "${
         # Remove etcd discovery record
         ETCD_DNS_NAME="_etcd-server-ssl._tcp.{{ lookup('env', 'INSTANCE_PREFIX') | mandatory }}.{{ public_hosted_zone }}."
         grep -F -e "${ETCD_DNS_NAME}" "${dns}" | awk '{ print "--name", $1, "--ttl", $2, "--type", $4, "\x27"$5" "$6" "$7" "$8"\x27"; }'  >> "${dns}.input" || true
+        APPS_NAME='*.{{ wildcard_zone }}.'
+        grep -F -e "${APPS_NAME}" "${dns}" | awk '{ print "--name", $1, "--ttl", $2, "--type", $4, "\x27"$5" "$6" "$7" "$8"\x27"; }'  >> "${dns}.input" || true
 
         if [ -s "${dns}.input" ]; then
             rm -f "${dns}"

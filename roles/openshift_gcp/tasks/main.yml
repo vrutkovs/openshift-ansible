@@ -120,9 +120,22 @@
     - name = "{{ openshift_gcp_prefix }}ig-m"
   register: master_instance_group
 
+- name: Get worker instance group
+  gcp_compute_instance_group_facts:
+    auth_kind: serviceaccount
+    scopes:
+    - https://www.googleapis.com/auth/compute
+    service_account_file: "{{ openshift_gcp_iam_service_account_keyfile }}"
+    project: "{{ openshift_gcp_project }}"
+    zone: "{{ openshift_gcp_zone }}"
+    filters:
+    - name = "{{ openshift_gcp_prefix }}ig-n"
+  register: worker_instance_group
+
 - set_fact:
     bootstrap_instance_group: "{{ bootstrap_instance_group['items'][0] }}"
     master_instance_group: "{{ master_instance_group['items'][0] }}"
+    worker_instance_group: "{{ worker_instance_group['items'][0] }}"
 
 - name: Wait for bootstrap instance group to start all instances
   gcp_compute_instance_group_manager_facts:
@@ -155,6 +168,22 @@
   delay: 5
   until:
   - "master_group_result['items'][0]['currentActions']['none'] == master_group_result['items'][0]['targetSize']"
+
+- name: Wait for worker instance group to start all instances
+  gcp_compute_instance_group_manager_facts:
+    auth_kind: serviceaccount
+    scopes:
+    - https://www.googleapis.com/auth/compute
+    service_account_file: "{{ openshift_gcp_iam_service_account_keyfile }}"
+    project: "{{ openshift_gcp_project }}"
+    zone: "{{ openshift_gcp_zone }}"
+    filters: "name = {{ worker_instance_group['name'] }}"
+  register: worker_group_result
+  # Wait for 3 minutes
+  retries: 36
+  delay: 5
+  until:
+  - "worker_group_result['items'][0]['currentActions']['none'] == worker_group_result['items'][0]['targetSize']"
 
 - name: Collect a list of instances
   gcp_compute_instance_facts:
@@ -192,6 +221,19 @@
   vars:
     cluster_tag: "{{ openshift_gcp_prefix }}ocp"
 
+- name: Filter instances to fetch workers
+  set_fact:
+    worker_instances: "{{ worker_instances | default([]) }} + [ {{ item }} ]"
+  with_items:
+  - "{{ all_instances['items'] }}"
+  when:
+  - "'tags' in item"
+  - "'items' in item['tags']"
+  - "cluster_tag in item['tags']['items']"
+  - "'ocp-worker' in item['tags']['items']"
+  vars:
+    cluster_tag: "{{ openshift_gcp_prefix }}ocp"
+
 - set_fact:
     etcd_discovery_targets: "{{ etcd_discovery_targets | default([]) }} + ['0 0 2380 {{ entry_name }}']"
     master_external_ips: "{{ master_external_ips | default([]) }} + ['{{ master_ip }}']"
@@ -202,6 +244,12 @@
 
 - set_fact:
     bootstrap_and_masters: "{{ master_external_ips | list }} + ['{{ bootstrap_instances.networkInterfaces[0].accessConfigs[0].natIP }}']"
+
+- set_fact:
+    worker_external_ips: "{{ worker_external_ips | default([]) }} + ['{{ worker_ip }}']"
+  with_indexed_items: "{{ worker_instances }}"
+  vars:
+    worker_ip: "{{ item.1.networkInterfaces[0].accessConfigs[0].natIP }}"
 
 - name: Get managed zone
   gcp_dns_managed_zone:
