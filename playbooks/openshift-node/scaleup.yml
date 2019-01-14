@@ -18,6 +18,7 @@
     l_openshift_version_set_hosts: "new_workers"
     l_install_base_packages: True
     l_repo_hosts: "new_workers"
+    l_base_packages_hosts: "new_workers"
 
 - name: install nodes
   hosts: new_workers
