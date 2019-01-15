@@ -1,0 +1,16 @@
+- name: run the init
+  import_playbook: ../../playbooks/init/main.yml
+  vars:
+    l_init_fact_hosts: "all:!all"
+    l_openshift_version_set_hosts: "all:!all"
+
+- import_playbook: create_machineset.yml
+
+- name: wait for nodes to become available
+  hosts: new_workers
+  gather_facts: false
+  tasks:
+  - wait_for_connection: {}
+  - setup: {}
+
+- import_playbook: ../../playbooks/openshift-node/scaleup.yml
