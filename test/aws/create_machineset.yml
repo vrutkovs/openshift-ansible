@@ -23,6 +23,8 @@
       value: "{{ machineset_name.result }}-centos"
     - key: spec#template#metadata#labels#sigs.k8s.io/cluster-api-machineset
       value: "{{ machineset_name.result }}-centos"
+    - key: spec#template#metadata#labels#sigs.k8s.io/cluster-api-machineset
+      value: "{{ machineset_name.result }}-centos"
     - key: spec#template#spec#providerSpec#value#keyName
       value: "vrutkovs"
     - key: spec#template#spec#providerSpec#value#ami#id
@@ -45,14 +47,14 @@
     namespace: openshift-cluster-api
     selector: "sigs.k8s.io/cluster-api-machineset={{ machineset_name.result }}-centos"
     kubeconfig: "{{ kubeconfig_path }}"
-  register: machine
+  register: new_machine
   until:
-  - "'results' in machine"
-  - "'results' in machine.results"
-  - "machine.results.results | length > 0"
-  - "'items' in machine.results.results[0]"
-  - "machine.results.results[0]['items'] | length > 0"
-  - "'status' in machine.results.results[0]['items'][0]"
+  - "'results' in new_machine"
+  - "'results' in new_machine.results"
+  - "new_machine.results.results | length > 0"
+  - "'items' in new_machine.results.results[0]"
+  - "new_machine.results.results[0]['items'] | length > 0"
+  - "'status' in new_machine.results.results[0]['items'][0]"
 
 - name: add localhost as master
   add_host:
@@ -62,6 +64,6 @@
 
 - name: add machine to the inventory
   add_host:
-    name: "{{ machine.results.results[0]['items'][0].status.addresses | selectattr('type', 'match', '^InternalIP$') | map(attribute='address') | first }}"
-    node_name: "{{ machine.results.results[0]['items'][0].status.addresses | selectattr('type', 'match', '^InternalDNS$') | map(attribute='address') | first }}"
+    name: "{{ new_machine.results.results[0]['items'][0].status.addresses | selectattr('type', 'match', '^InternalIP$') | map(attribute='address') | first }}"
+    node_name: "{{ new_machine.results.results[0]['items'][0].status.addresses | selectattr('type', 'match', '^InternalDNS$') | map(attribute='address') | first }}"
     groups: new_workers

@@ -4,10 +4,29 @@
     l_init_fact_hosts: "all:!all"
     l_openshift_version_set_hosts: "all:!all"
 
-- name: create rhel nodes
+- name: create new nodes
   hosts: localhost
   connection: local
   tasks:
+  - name: List existing workers
+    oc_obj:
+      kubeconfig: "{{ kubeconfig_path }}"
+      state: list
+      kind: node
+      selector: "node-role.kubernetes.io/worker"
+    delegate_to: localhost
+    register: pre_scaleup_workers
+    until:
+    - pre_scaleup_workers.results is defined
+    - pre_scaleup_workers.results.returncode is defined
+    - pre_scaleup_workers.results.results is defined
+    - pre_scaleup_workers.results.returncode == 0
+    retries: 36
+    delay: 5
+
+  - set_fact:
+      pre_scaleup_workers_name: "{{ pre_scaleup_workers.results.results[0]['items'] |map(attribute='metadata.name') | list }}"
+
   - name: create temp directory
     command: mktemp -d /tmp/openshift-ansible-XXXXXXX
     register: mktemp
@@ -21,6 +40,9 @@
       selector: ""
       kubeconfig: "{{ kubeconfig_path }}"
     register: machineset
+
+  - set_fact:
+      pre_scaleup_machineset_names: "{{ machineset.results.results[0]['items'] |map(attribute='metadata.name') | list }}"
 
   - include_tasks: create_machineset.yml
     loop: "{{ machineset.results.results[0]['items'] }}"
@@ -38,24 +60,44 @@
 
 - name: wait for nodes to join
   hosts: new_workers
-  connection: local
   tasks:
-  - name: Wait for node to be ready
+  - name: Wait for new nodes to be ready
     oc_obj:
       kubeconfig: "{{ kubeconfig_path }}"
       state: list
       kind: node
       name: "{{ node_name }}"
     delegate_to: localhost
-    register: node_output
+    register: new_machine
     until:
-    - node_output.results is defined
-    - node_output.results.returncode is defined
-    - node_output.results.results is defined
-    - node_output.results.returncode == 0
-    - node_output.results.results[0].status is defined
-    - node_output.results.results[0].status.conditions is defined
-    - node_output.results.results[0].status.conditions | selectattr('type', 'match', '^Ready$') | map(attribute='status') | join | bool == True
+    - new_machine.results is defined
+    - new_machine.results.returncode is defined
+    - new_machine.results.results is defined
+    - new_machine.results.returncode == 0
+    - new_machine.results.results[0].status is defined
+    - new_machine.results.results[0].status.conditions is defined
+    - new_machine.results.results[0].status.conditions | selectattr('type', 'match', '^Ready$') | map(attribute='status') | join | bool == True
     # Give the node three minutes to come back online.
     retries: 36
     delay: 5
+
+- name: create new nodes
+  hosts: localhost
+  connection: local
+  tasks:
+  - name: remove existing machinesets
+    oc_obj:
+      state: absent
+      kind: machinesets
+      namespace: openshift-cluster-api
+      name: "{{ item }}"
+      kubeconfig: "{{ kubeconfig_path }}"
+    with_items: "{{ pre_scaleup_machineset_names }}"
+
+  - name: Delete CoreOS nodes
+    oc_obj:
+      kubeconfig: "{{ kubeconfig_path }}"
+      state: absent
+      kind: node
+      name: "{{ item }}"
+    with_items: "{{ pre_scaleup_workers_name }}"
