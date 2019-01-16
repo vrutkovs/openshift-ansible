@@ -1,85 +1,67 @@
 ---
-- name: create rhel nodes
-  hosts: localhost
-  connection: local
-  tasks:
-  - name: create temp directory
-    command: mktemp -d /tmp/openshift-ansible-XXXXXXX
-    register: mktemp
-    changed_when: False
-    
-  - name: get existing worker machinesets
-    oc_obj:
-      state: list
-      kind: machinesets
-      namespace: openshift-cluster-api
-      selector: ""
-      kubeconfig: "{{ kubeconfig_path }}"
-    register: machineset
+- name: save machineset to a file
+  copy:
+    content: "{{ machineset }}"
+    dest: "{{ mktemp.stdout }}/machineset.yaml"
 
-  - name: save first machineset to a file
-    copy:
-      content: "{{ machineset.results.results[0]['items'][0] }}"
-      dest: "{{ mktemp.stdout }}/machineset.yaml"
+- name: get existing machineset name
+  yedit:
+    state: list
+    src: "{{ mktemp.stdout }}/machineset.yaml"
+    key: "metadata.name"
+  register: machineset_name
 
-  - name: get existing machineset name
-    yedit:
-      state: list
-      src: "{{ mktemp.stdout }}/machineset.yaml"
-      key: "metadata.name"
-    register: machineset_name
+- name: edit machineset name
+  yedit:
+    src: "{{ mktemp.stdout }}/machineset.yaml"
+    separator: '#'
+    state: present
+    edits:
+    - key: metadata#name
+      value: "{{ machineset_name.result }}-centos"
+    - key: spec#selector#matchLabels#sigs.k8s.io/cluster-api-machineset
+      value: "{{ machineset_name.result }}-centos"
+    - key: spec#template#metadata#labels#sigs.k8s.io/cluster-api-machineset
+      value: "{{ machineset_name.result }}-centos"
+    - key: spec#template#spec#providerSpec#value#keyName
+      value: "vrutkovs"
+    - key: spec#template#spec#providerSpec#value#ami#id
+      value: "ami-0c7966a5e4c63fad6"
 
-  - name: edit machineset name
-    yedit:
-      src: "{{ mktemp.stdout }}/machineset.yaml"
-      separator: '#'
-      state: present
-      edits:
-      - key: metadata#name
-        value: "{{ machineset_name.result }}-centos"
-      - key: spec#selector#matchLabels#sigs.k8s.io/cluster-api-machineset
-        value: "{{ machineset_name.result }}-centos"
-      - key: spec#template#metadata#labels#sigs.k8s.io/cluster-api-machineset
-        value: "{{ machineset_name.result }}-centos"
-      - key: spec#template#spec#providerSpec#value#keyName
-        value: "vrutkovs"
-      - key: spec#template#spec#providerSpec#value#ami#id
-        value: "ami-0c7966a5e4c63fad6"
-  
-  - name: import machinespec
-    oc_obj:
-      state: present
-      namespace: "openshift-cluster-api"
-      kind: machineset
-      name: "{{ machineset_name.result }}-centos"
-      kubeconfig: "{{ kubeconfig_path }}"
-      files:
-        - "{{ mktemp.stdout }}/machineset.yaml"
+- name: import machinespec
+  oc_obj:
+    state: present
+    namespace: "openshift-cluster-api"
+    kind: machineset
+    name: "{{ machineset_name.result }}-centos"
+    kubeconfig: "{{ kubeconfig_path }}"
+    files:
+      - "{{ mktemp.stdout }}/machineset.yaml"
 
-  - name: wait for machine to be created
-    oc_obj:
-      state: list
-      kind: machines
-      namespace: openshift-cluster-api
-      selector: "sigs.k8s.io/cluster-api-machineset={{ machineset_name.result }}-centos"
-      kubeconfig: "{{ kubeconfig_path }}"
-    register: machine
-    until:
-    - "'results' in machine"
-    - "'results' in machine.results"
-    - "machine.results.results | length > 0"
-    - "'items' in machine.results.results[0]"
-    - "machine.results.results[0]['items'] | length > 0"
-    - "'status' in machine.results.results[0]['items'][0]"
+- name: wait for machine to be created
+  oc_obj:
+    state: list
+    kind: machines
+    namespace: openshift-cluster-api
+    selector: "sigs.k8s.io/cluster-api-machineset={{ machineset_name.result }}-centos"
+    kubeconfig: "{{ kubeconfig_path }}"
+  register: machine
+  until:
+  - "'results' in machine"
+  - "'results' in machine.results"
+  - "machine.results.results | length > 0"
+  - "'items' in machine.results.results[0]"
+  - "machine.results.results[0]['items'] | length > 0"
+  - "'status' in machine.results.results[0]['items'][0]"
 
-  - name: add localhost as master
-    add_host:
-      name: localhost
-      ansible_connection: local
-      groups: masters
+- name: add localhost as master
+  add_host:
+    name: localhost
+    ansible_connection: local
+    groups: masters
 
-  - name: add machine to the inventory
-    add_host:
-      name: "{{ machine.results.results[0]['items'][0].status.addresses | selectattr('type', 'match', '^InternalIP$') | map(attribute='address') | first }}"
-      node_name: "{{ machine.results.results[0]['items'][0].status.addresses | selectattr('type', 'match', '^InternalDNS$') | map(attribute='address') | first }}"
-      groups: new_workers
+- name: add machine to the inventory
+  add_host:
+    name: "{{ machine.results.results[0]['items'][0].status.addresses | selectattr('type', 'match', '^InternalIP$') | map(attribute='address') | first }}"
+    node_name: "{{ machine.results.results[0]['items'][0].status.addresses | selectattr('type', 'match', '^InternalDNS$') | map(attribute='address') | first }}"
+    groups: new_workers
