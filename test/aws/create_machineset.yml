@@ -70,6 +70,7 @@
     - "machine.results.results | length > 0"
     - "'items' in machine.results.results[0]"
     - "machine.results.results[0]['items'] | length > 0"
+    - "'status' in machine.results.results[0]['items'][0]"
 
   - name: add localhost as master
     add_host:
