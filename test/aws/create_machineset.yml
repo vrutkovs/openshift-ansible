@@ -26,9 +26,9 @@
     - key: spec#template#metadata#labels#sigs.k8s.io/cluster-api-machineset
       value: "{{ machineset_name.result }}-centos"
     - key: spec#template#spec#providerSpec#value#keyName
-      value: "vrutkovs"
+      value: "{{ openshift_aws_scaleup_key }}"
     - key: spec#template#spec#providerSpec#value#ami#id
-      value: "ami-0c7966a5e4c63fad6"
+      value: "{{ openshift_aws_scaleup_ami }}"
 
 - name: import machinespec
   oc_obj:
