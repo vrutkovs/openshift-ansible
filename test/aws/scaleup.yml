@@ -12,8 +12,6 @@
 
   - include_tasks: create_machineset.yml
     loop: "{{ machineset.results.results[0]['items'] }}"
-    loop_control:
-      loop_var: machineset
 
 - name: wait for nodes to become available
   hosts: new_workers
