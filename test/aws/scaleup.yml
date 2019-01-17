@@ -8,41 +8,7 @@
   hosts: localhost
   connection: local
   tasks:
-  - name: List existing workers
-    oc_obj:
-      kubeconfig: "{{ kubeconfig_path }}"
-      state: list
-      kind: node
-      selector: "node-role.kubernetes.io/worker"
-    delegate_to: localhost
-    register: pre_scaleup_workers
-    until:
-    - pre_scaleup_workers.results is defined
-    - pre_scaleup_workers.results.returncode is defined
-    - pre_scaleup_workers.results.results is defined
-    - pre_scaleup_workers.results.returncode == 0
-    retries: 36
-    delay: 5
-
-  - set_fact:
-      pre_scaleup_workers_name: "{{ pre_scaleup_workers.results.results[0]['items'] |map(attribute='metadata.name') | list }}"
-
-  - name: create temp directory
-    command: mktemp -d /tmp/openshift-ansible-XXXXXXX
-    register: mktemp
-    changed_when: False
-
-  - name: get existing worker machinesets
-    oc_obj:
-      state: list
-      kind: machinesets
-      namespace: openshift-cluster-api
-      selector: ""
-      kubeconfig: "{{ kubeconfig_path }}"
-    register: machineset
-
-  - set_fact:
-      pre_scaleup_machineset_names: "{{ machineset.results.results[0]['items'] |map(attribute='metadata.name') | list }}"
+  - import_tasks: get_machinesets.yml
 
   - include_tasks: create_machineset.yml
     loop: "{{ machineset.results.results[0]['items'] }}"
@@ -85,6 +51,21 @@
   hosts: localhost
   connection: local
   tasks:
+  - name: Mark CoreOS nodes as unschedulable
+    oc_adm_manage_node:
+      kubeconfig: "{{ kubeconfig_path }}"
+      node: "{{ item }}"
+      schedulable: False
+    with_items: "{{ pre_scaleup_workers_name }}"
+
+  - name: Drain CoreOS nodes
+    command: >
+      oc adm drain {{ item | lower }}
+      --config={{ kubeconfig_path }}
+      --force --delete-local-data --ignore-daemonsets
+      --timeout=0s
+    with_items: "{{ pre_scaleup_workers_name }}"
+
   - name: remove existing machinesets
     oc_obj:
       state: absent
