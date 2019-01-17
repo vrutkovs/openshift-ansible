@@ -47,7 +47,7 @@
     retries: 36
     delay: 5
 
-- name: create new nodes
+- name: Remove CoreOS nodes
   hosts: localhost
   connection: local
   tasks:
