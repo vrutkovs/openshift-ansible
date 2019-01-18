@@ -12,6 +12,7 @@
 
   - include_tasks: create_machineset.yml
     loop: "{{ machineset.results.results[0]['items'] }}"
+    when: "{{ item.replicas }} != 0"
 
 - name: wait for nodes to become available
   hosts: new_workers
