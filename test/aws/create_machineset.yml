@@ -58,12 +58,6 @@
   - "new_machine.results.results[0]['items'] | length > 0"
   - "'status' in new_machine.results.results[0]['items'][0]"
   
-- name: add localhost as master
-  add_host:
-    name: localhost
-    ansible_connection: local
-    groups: masters
-
 - name: add machine to the inventory
   add_host:
     name: "{{ new_machine.results.results[0]['items'][0].status.addresses | selectattr('type', 'match', '^InternalIP$') | map(attribute='address') | first }}"

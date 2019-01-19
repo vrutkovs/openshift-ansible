@@ -8,6 +8,12 @@
   hosts: localhost
   connection: local
   tasks:
+  - name: add localhost as master
+    add_host:
+      name: localhost
+      ansible_connection: local
+      groups: masters
+
   - import_tasks: get_machinesets.yml
 
   - include_tasks: create_machineset.yml
