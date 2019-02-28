@@ -172,8 +172,7 @@ class ActionModule(ActionBase):
 
     def check_openshift_deployment_type(self, host):
         """Ensure a valid openshift_deployment_type is set"""
-        openshift_deployment_type = self.template_var(self.hostvars, host,
-                                                      'openshift_deployment_type')
+        openshift_deployment_type = self.template_var(host, 'openshift_deployment_type')
         if openshift_deployment_type not in VALID_DEPLOYMENT_TYPES:
             type_strings = ", ".join(VALID_DEPLOYMENT_TYPES)
             msg = "openshift_deployment_type must be defined and one of {}".format(type_strings)
@@ -182,9 +181,9 @@ class ActionModule(ActionBase):
 
     def get_allowed_registries(self, host):
         """Returns a list of configured allowedRegistriesForImport as a list of patterns"""
-        allowed_registries_for_import = self.template_var(self.hostvars, host, ALLOWED_REGISTRIES_VAR)
+        allowed_registries_for_import = self.template_var(host, ALLOWED_REGISTRIES_VAR)
         if allowed_registries_for_import is None:
-            image_policy_config = self.template_var(self.hostvars, host, IMAGE_POLICY_CONFIG_VAR)
+            image_policy_config = self.template_var(host, IMAGE_POLICY_CONFIG_VAR)
             if not image_policy_config:
                 return image_policy_config
 
@@ -488,7 +487,7 @@ class ActionModule(ActionBase):
         display.warning("check_htpasswd_provider %s" % datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'))
         self.check_htpasswd_provider(host)
         display.warning("check_for_removed_vars %s" % datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'))
-        check_for_removed_vars(host)
+        self.check_for_removed_vars(host)
         display.warning("validate_json_format_vars %s" % datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'))
         self.validate_json_format_vars(host)
         display.warning("check_for_oreg_password %s" % datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'))
