@@ -165,7 +165,7 @@ class ActionModule(ActionBase):
         self.last_checked_var = varname
         # pylint: disable=W0201
         self.last_checked_host = host
-        res = self.hostvars[host].get(varname)
+        res = self.current_hostvars.get(varname)
         if res is None:
             return None
         return self._templar.template(res)
@@ -407,7 +407,7 @@ class ActionModule(ActionBase):
         """Fails if invalid json format are found"""
         found_invalid_json = []
         for var in JSON_FORMAT_VARIABLES:
-            if var in self.hostvars[host]:
+            if var in self.current_hostvars:
                 json_var = self.template_var(host, var)
                 try:
                     json.loads(json_var)
@@ -451,7 +451,7 @@ class ActionModule(ActionBase):
         """Fails if removed variables are found"""
         found_removed = []
         for item in REMOVED_VARIABLES:
-            if item[0] in self.hostvars[host]:
+            if item[0] in self.current_hostvars:
                 found_removed.append(item)
 
         if found_removed:
@@ -542,6 +542,7 @@ class ActionModule(ActionBase):
         # We loop through each host in the provided list check_hosts
         for host in check_hosts:
             try:
+                self.current_hostvars = self.hostvars[host]
                 self.run_checks(host)
             except Exception as uncaught_e:
                 msg = "last_checked_host: {}, last_checked_var: {};"
