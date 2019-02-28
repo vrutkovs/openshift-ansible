@@ -5,11 +5,17 @@ appropriately and no conflicting options have been provided.
 import fnmatch
 import json
 import re
+import datetime
+import time
 
 from ansible.plugins.action import ActionBase
 from ansible import errors
 # pylint: disable=import-error,no-name-in-module
 from ansible.module_utils.six.moves.urllib.parse import urlparse
+
+from ansible.utils.display import Display
+
+display = Display()
 
 
 # Valid values for openshift_deployment_type
@@ -459,20 +465,36 @@ class ActionModule(ActionBase):
     def run_checks(self, host):
         """Execute the hostvars validations against host"""
         distro = self.template_var(host, 'ansible_distribution')
+        display.warning("check_openshift_deployment_type %s" % datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'))
         odt = self.check_openshift_deployment_type(host)
+        display.warning("check_whitelisted_registries %s" % datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'))
         self.check_whitelisted_registries(host)
+        display.warning("check_python_version %s" % datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'))
         self.check_python_version(host, distro)
+        display.warning("check_image_tag_format %s" % datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'))
         self.check_image_tag_format(host, odt)
+        display.warning("check_pkg_version_format %s" % datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'))
         self.check_pkg_version_format(host)
+        display.warning("check_release_format %s" % datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'))
         self.check_release_format(host)
+        display.warning("network_plugin_check %s" % datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'))
         self.network_plugin_check(host)
+        display.warning("check_hostname_vars %s" % datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'))
         self.check_hostname_vars(host)
+        display.warning("check_session_auth_secrets %s" % datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'))
         self.check_session_auth_secrets(host)
+        display.warning("check_unsupported_nfs_configs %s" % datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'))
         self.check_unsupported_nfs_configs(host)
+        display.warning("check_htpasswd_provider %s" % datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'))
         self.check_htpasswd_provider(host)
+        display.warning("check_for_removed_vars %s" % datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'))
         check_for_removed_vars(host)
+        display.warning("validate_json_format_vars %s" % datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'))
         self.validate_json_format_vars(host)
+        display.warning("check_for_oreg_password %s" % datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'))
         self.check_for_oreg_password(host, odt)
+        display.warning("check finished at %s" % datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'))
+        raise Exception("done")
 
     def run(self, tmp=None, task_vars=None):
         result = super(ActionModule, self).run(tmp, task_vars)
