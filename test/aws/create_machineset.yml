@@ -1,7 +1,7 @@
 ---
 - name: save machineset to a file
   copy:
-    content: "{{ item | to_yaml }}"
+    content: "{{ item }}"
     dest: "{{ mktemp.stdout }}/machineset.yaml"
 
 - name: get existing machineset name
