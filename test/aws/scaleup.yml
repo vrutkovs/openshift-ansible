@@ -9,11 +9,6 @@
   hosts: localhost
   connection: local
   tasks:
-  - name: create temp directory
-    command: mktemp -d /tmp/openshift-ansible-XXXXXXX
-    register: mktemp
-    changed_when: False
-
   - import_tasks: ssh_bastion.yml
 
   - import_tasks: get_machinesets.yml

@@ -1,19 +1,14 @@
 ---
-- name: save machineset to a file
-  copy:
-    content: "{{ item }}"
-    dest: "{{ mktemp.stdout }}/machineset.yaml"
-
 - name: get existing machineset name
   yedit:
     state: list
-    src: "{{ mktemp.stdout }}/machineset.yaml"
+    content: "{{ item }}"
     key: "metadata.name"
   register: machineset_name
 
 - name: edit machineset name
   yedit:
-    src: "{{ mktemp.stdout }}/machineset.yaml"
+    content: "{{ item }}"
     separator: '#'
     state: present
     edits:
@@ -31,11 +26,12 @@
       value: "{{ openshift_aws_scaleup_key }}"
     - key: spec#template#spec#providerSpec#value#ami#id
       value: "{{ openshift_aws_scaleup_ami }}"
+  register: edited_machineset
 
 - name: import machinespec
   k8s:
     kubeconfig: "{{ kubeconfig_path }}"
-    src: "{{ mktemp.stdout }}/machineset.yaml"
+    definition: "{{ edited_machineset.result[-1].edit }}"
 
 - name: wait for machine to be created
   k8s_facts:
