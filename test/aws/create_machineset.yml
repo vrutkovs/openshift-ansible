@@ -26,6 +26,14 @@
       value: "{{ openshift_aws_scaleup_key }}"
     - key: spec#template#spec#providerSpec#value#ami#id
       value: "{{ openshift_aws_scaleup_ami }}"
+    - key: spec#template#metadata#creationTimestamp
+      value: null
+    - key: spec#template#spec#metadata#creationTimestamp
+      value: null
+    - key: spec#template#spec#providerSpec#value#metadata#creationTimestamp
+      value: null
+    - key: spec#template#spec#providerSpec#value#publicIp
+      value: null
   register: edited_machineset
 
 - name: import machinespec
