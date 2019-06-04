@@ -36,10 +36,6 @@
 - name: wait for nodes to join
   hosts: new_workers
   tasks:
-  - name: HACK disable selinux
-    selinux:
-      policy: targeted
-      state: permissive
   - name: Create core user for storage tests to pass
     user:
       name: core
